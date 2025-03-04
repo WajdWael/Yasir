@@ -1,10 +1,3 @@
-//
-//  ContentView.swift
-//  Yasir
-//
-//  Created by Wajd Wael on 04/09/1446 AH.
-//
-
 import SwiftUI
 
 struct ContentView: View {
