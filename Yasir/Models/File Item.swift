@@ -20,6 +20,20 @@
 //}
 
 
+//import Foundation
+//import SwiftData
+//
+//@Model
+//class Document {
+//    var name: String
+//    var pdfData: Data
+//
+//    init(name: String, pdfData: Data) {
+//        self.name = name
+//        self.pdfData = pdfData
+//    }
+//}
+
 import Foundation
 import SwiftData
 
@@ -27,9 +41,12 @@ import SwiftData
 class Document {
     var name: String
     var pdfData: Data
+    var extractedText: String?
 
-    init(name: String, pdfData: Data) {
+    init(name: String, pdfData: Data, extractedText: String? = nil) {
         self.name = name
         self.pdfData = pdfData
+        self.extractedText = extractedText
+        
     }
 }

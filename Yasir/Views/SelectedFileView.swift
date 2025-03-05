@@ -78,7 +78,7 @@ struct FilesView: View {
                             ForEach(filteredFiles) {document in
                                 
                                 NavigationLink(destination:
-                                                ServicesView(fileName: document.name))/*DocumentDetailView(document: document, viewModel: viewModel))*/ {
+                                                ServicesView(document: document))/*DocumentDetailView(document: document, viewModel: viewModel))*/ {
                                     HStack {
                                         RoundedRectangle(cornerRadius: 8)
                                             .fill(Color.teal)
