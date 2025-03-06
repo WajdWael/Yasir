@@ -433,12 +433,13 @@
 import SwiftUI
 
 struct ServicesView: View {
-    let document: Document
+    let document: Document // Assume Document model is defined elsewhere with an 'extractedText' property.
     @State private var isGenerating = false
     @State private var navigateToExam = false
     @State private var navigateToSummary = false
     @State private var generatedExam: String = ""
-    @State private var generatedSummary: String = ""  // Added summary state
+    @State private var examQuestions: [Question] = [] // New state variable for parsed questions.
+    @State private var generatedSummary: String = ""
     @State private var errorMessage: String?
     
     let geminiService = GeminiService()
@@ -468,8 +469,9 @@ struct ServicesView: View {
                         print("Podcast feature coming soon!")
                     }
                 }
-                ServiceButton(title: "Summary", icon: "clipboard.text") {
-                    startSummaryGeneration()  // Start generating summary when clicked
+                // Using a valid SF Symbol for the summary button.
+                ServiceButton(title: "Summary", icon: "doc.on.clipboard") {
+                    startSummaryGeneration()
                 }
                 
                 Spacer()
@@ -492,19 +494,24 @@ struct ServicesView: View {
                 if !generatedSummary.isEmpty {
                     NavigationLink(destination: SummaryView(summary: generatedSummary)) {
                         Text("Go to Summary")
-                        .font(.headline)
-                         .foregroundColor(.teal)
-                         .padding(.top, 20)
-              }
-                                    
+                            .font(.headline)
+                            .foregroundColor(.teal)
+                            .padding(.top, 20)
+                    }
                 }
                 
-                NavigationLink(destination: ExamView(questions: parseExam(generatedExam)), isActive: $navigateToExam) {
+                // Navigation link for the exam view.
+                // The .id(examQuestions.count) forces the destination to rebuild when examQuestions changes.
+                NavigationLink(
+                    destination: ExamView(questions: examQuestions).id(examQuestions.count),
+                    isActive: $navigateToExam
+                ) {
                     EmptyView()
                 }
             }
             .padding()
         }
+        .tint(.white)
     }
     
     // Function to start generating an exam
@@ -516,16 +523,19 @@ struct ServicesView: View {
         }
         
         isGenerating = true
-        errorMessage = nil // Reset error message
+        errorMessage = nil
         
         Task {
             do {
                 let result = try await geminiService.processText(content: text, type: .questions)
-                
+                print("Generated Exam JSON:", result)
+                // Parse the exam questions immediately
+                let parsedQuestions = parseExam(result)
                 DispatchQueue.main.async {
-                    generatedExam = result
+                    generatedExam = result // (for debugging if needed)
+                    examQuestions = parsedQuestions // Store parsed questions.
                     isGenerating = false
-                    navigateToExam = true
+                    navigateToExam = true  // Now navigate with valid questions.
                 }
             } catch {
                 DispatchQueue.main.async {
@@ -546,12 +556,11 @@ struct ServicesView: View {
         }
         
         isGenerating = true
-        errorMessage = nil // Reset error message
+        errorMessage = nil
         
         Task {
             do {
                 let result = try await geminiService.processText(content: text, type: .summary)
-                
                 DispatchQueue.main.async {
                     generatedSummary = result
                     isGenerating = false
@@ -567,11 +576,23 @@ struct ServicesView: View {
         }
     }
     
-    // Parse JSON response into questions array
+    // Parsing function that removes markdown code blocks and decodes JSON properly.
     private func parseExam(_ jsonString: String) -> [Question] {
-        guard let data = jsonString.data(using: .utf8) else {
-            print("Error: Invalid JSON string.")
-            errorMessage = "Invalid response format."
+        var cleanedString = jsonString.trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        // Extract JSON inside markdown code block if present.
+        if cleanedString.hasPrefix("```json") {
+            if let startRange = cleanedString.range(of: "```json") {
+                cleanedString = String(cleanedString[startRange.upperBound...])
+            }
+            if let endRange = cleanedString.range(of: "```", options: .backwards) {
+                cleanedString = String(cleanedString[..<endRange.lowerBound])
+            }
+            cleanedString = cleanedString.trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+        
+        guard let data = cleanedString.data(using: .utf8) else {
+            print("Invalid JSON string")
             return []
         }
         
@@ -579,14 +600,13 @@ struct ServicesView: View {
             let questions = try JSONDecoder().decode([Question].self, from: data)
             return questions
         } catch {
-            print("Error parsing JSON: \(error.localizedDescription)")
-            errorMessage = "Error parsing exam. Please check the response format."
+            print("JSON parsing error: \(error)")
             return []
         }
     }
 }
 
-// Custom button component
+// Custom button component remains unchanged.
 struct ServiceButton: View {
     let title: String
     let icon: String
@@ -607,6 +627,10 @@ struct ServiceButton: View {
         }
     }
 }
+
+
+
+
 
 //// Preview
 //struct ServicesView_Previews: PreviewProvider {
