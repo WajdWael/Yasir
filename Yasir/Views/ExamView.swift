@@ -8,28 +8,47 @@
 import SwiftUI
 
 struct ExamView: View {
-    @StateObject private var viewModel: ExamViewModel
-    
-    init(questions: [Question]) {
-        _viewModel = StateObject(wrappedValue: ExamViewModel(questions: questions))
-    }
-    
-    var body: some View {
-        VStack(spacing: 20) {
-            if viewModel.currentQuestionIndex < viewModel.questions.count {
-                progressSection
-                cardStack
-            } else {
-                ExamSummaryView(
-                    questions: viewModel.questions,
-                    stableAnswers: viewModel.stableAnswers,
-                    selectedAnswers: viewModel.selectedAnswers
-                )
-            }
-            Spacer()
+    let documentName: String
+        @StateObject private var viewModel: ExamViewModel
+        @EnvironmentObject private var examHistory: ExamHistory
+        
+        init(documentName: String, questions: [Question]) {
+            self.documentName = documentName
+            _viewModel = StateObject(wrappedValue: ExamViewModel(questions: questions))
         }
-        .background(Color.teal.ignoresSafeArea())
-    }
+        
+        var body: some View {
+            VStack(spacing: 20) {
+                if viewModel.currentQuestionIndex < viewModel.questions.count {
+                    progressSection
+                    cardStack
+                } else {
+                    ExamSummaryView(
+                        documentName: documentName,
+                        questions: viewModel.questions,
+                        stableAnswers: viewModel.stableAnswers,
+                        selectedAnswers: viewModel.selectedAnswers
+                    )
+                    .onAppear {
+                        guard !viewModel.questions.isEmpty else { return }
+                        
+                        let summary = ExamSummary(
+                            examNumber: 0,
+                            documentName: documentName,
+                            questions: viewModel.questions,
+                            stableAnswers: viewModel.stableAnswers,
+                            selectedAnswers: viewModel.selectedAnswers,
+                            correctAnswersCount: viewModel.correctAnswersCount,
+                            totalQuestions: viewModel.totalQuestions,
+                            date: Date()
+                        )
+                        examHistory.addExam(summary)
+                    }
+                }
+                Spacer()
+            }
+            .background(Color.teal.ignoresSafeArea())
+        }
     
     private var progressSection: some View {
         VStack(spacing: 10) {
@@ -84,23 +103,24 @@ extension View {
 
 struct ExamView_Previews: PreviewProvider {
     static var previews: some View {
-        let questions = [
-            Question(
-                question: "Which of the following is an example of a valid logical statement?",
-                correctAnswer: "If it is raining, then the ground is wet.",
-                incorrectAnswers: [
-                    "A cat is an animal, and animals can fly.",
-                    "The sun is made of water, so it is cold.",
-                    "If I study, I will pass, but if I don't study, I will also pass."
-                ]
-            ),
-            Question(
-                question: "What is 2 + 2?",
-                correctAnswer: "4",
-                incorrectAnswers: ["1", "2", "3"]
-            )
-        ]
-        
-        return ExamView(questions: questions)
+        ExamView(
+            documentName: "Sample Document", // Add this line
+            questions: [
+                Question(
+                    question: "Which of the following is an example of a valid logical statement?",
+                    correctAnswer: "If it is raining, then the ground is wet.",
+                    incorrectAnswers: [
+                        "A cat is an animal, and animals can fly.",
+                        "The sun is made of water, so it is cold.",
+                        "If I study, I will pass, but if I don't study, I will also pass."
+                    ]
+                ),
+                Question(
+                    question: "What is 2 + 2?",
+                    correctAnswer: "4",
+                    incorrectAnswers: ["1", "2", "3"]
+                )
+            ]
+        )
     }
 }

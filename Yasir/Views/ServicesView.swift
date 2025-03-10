@@ -431,19 +431,23 @@
 
 
 import SwiftUI
+import Foundation
 
 struct ServicesView: View {
-    let document: Document // Assume Document model is defined elsewhere with an 'extractedText' property.
+    let document: Document
     @State private var isGenerating = false
     @State private var navigateToExam = false
     @State private var navigateToSummary = false
     @State private var generatedExam: String = ""
-    @State private var examQuestions: [Question] = [] // New state variable for parsed questions.
+    @State private var examQuestions: [Question] = []
     @State private var generatedSummary: String = ""
     @State private var errorMessage: String?
-    
     let geminiService = GeminiService()
+    @EnvironmentObject var examHistory: ExamHistory // Add this line
     
+    @State private var showingDeleteAlert = false
+    @State private var deleteOffsets: IndexSet?
+
     var body: some View {
         NavigationStack {
             VStack {
@@ -459,38 +463,69 @@ struct ServicesView: View {
                     .foregroundColor(.gray)
                     .padding(.top, 10)
                 
-                // Buttons for AI Services
                 HStack {
                     ServiceButton(title: "Exam", icon: "doc.text") {
                         startExamGeneration()
                     }
                     ServiceButton(title: "Podcast", icon: "mic") {
-                        // Placeholder for future podcast feature
                         print("Podcast feature coming soon!")
                     }
                 }
-                // Using a valid SF Symbol for the summary button.
+                
                 ServiceButton(title: "Summary", icon: "doc.on.clipboard") {
                     startSummaryGeneration()
                 }
                 
+                // Exam history list (added section)
+                List {
+                    ForEach(examHistory.pastExams) { exam in
+                        NavigationLink(destination: ExamSummaryView(
+                            documentName: exam.documentName,
+                            questions: exam.questions,
+                            stableAnswers: exam.stableAnswers,
+                            selectedAnswers: exam.selectedAnswers
+                        )) {
+                            VStack(alignment: .leading) {
+                                Text("Exam \(exam.examNumber): \(exam.documentName)")
+                                    .font(.headline)
+                                Text("Score: \(exam.correctAnswersCount)/\(exam.totalQuestions)")
+                                    .foregroundColor(.gray)
+                                Text(exam.date, style: .date)
+                                    .font(.caption)
+                            }
+                        }
+                    }
+                    .onDelete { offsets in
+                        deleteOffsets = offsets
+                        showingDeleteAlert = true
+                    }
+                }
+                .listStyle(PlainListStyle())
+                .alert("Delete Exam?", isPresented: $showingDeleteAlert) {
+                    Button("Delete", role: .destructive) {
+                        if let offsets = deleteOffsets {
+                            examHistory.removeExams(at: offsets)
+                        }
+                    }
+                    Button("Cancel", role: .cancel) {}
+                } message: {
+                    Text("This action cannot be undone.")
+                }
+                
                 Spacer()
                 
-                // Show loading view while generating
                 if isGenerating {
                     ProgressView("Generating...")
                         .progressViewStyle(CircularProgressViewStyle())
                         .padding(.top, 20)
                 }
                 
-                // Show error message if any
                 if let errorMessage = errorMessage {
                     Text(errorMessage)
                         .foregroundColor(.red)
                         .padding(.top, 10)
                 }
                 
-                // Show the generated summary if available
                 if !generatedSummary.isEmpty {
                     NavigationLink(destination: SummaryView(summary: generatedSummary)) {
                         Text("Go to Summary")
@@ -500,10 +535,13 @@ struct ServicesView: View {
                     }
                 }
                 
-                // Navigation link for the exam view.
-                // The .id(examQuestions.count) forces the destination to rebuild when examQuestions changes.
                 NavigationLink(
-                    destination: ExamView(questions: examQuestions).id(examQuestions.count),
+                    destination: ExamView(
+                        documentName: document.name,
+                        questions: examQuestions
+                    )
+                    .environmentObject(examHistory)
+                    .id(examQuestions.count),
                     isActive: $navigateToExam
                 ) {
                     EmptyView()
@@ -517,30 +555,28 @@ struct ServicesView: View {
     // Function to start generating an exam
     private func startExamGeneration() {
         guard let text = document.extractedText else {
-            print("No text found in document.")
             errorMessage = "No text found in document."
             return
         }
-        
         isGenerating = true
-        errorMessage = nil
-        
         Task {
             do {
                 let result = try await geminiService.processText(content: text, type: .questions)
-                print("Generated Exam JSON:", result)
-                // Parse the exam questions immediately
                 let parsedQuestions = parseExam(result)
+                
+                // Check for valid questions
+                guard !parsedQuestions.isEmpty else {
+                    throw NSError(domain: "AppError", code: 1, userInfo: [NSLocalizedDescriptionKey: "Failed to generate valid exam questions"])
+                }
+                
                 DispatchQueue.main.async {
-                    generatedExam = result // (for debugging if needed)
-                    examQuestions = parsedQuestions // Store parsed questions.
+                    examQuestions = parsedQuestions
                     isGenerating = false
-                    navigateToExam = true  // Now navigate with valid questions.
+                    navigateToExam = true
                 }
             } catch {
                 DispatchQueue.main.async {
-                    print("Error generating exam: \(error.localizedDescription)")
-                    errorMessage = "Error generating exam. Please try again."
+                    errorMessage = "Error generating exam: \(error.localizedDescription)"
                     isGenerating = false
                 }
             }
@@ -629,6 +665,13 @@ struct ServiceButton: View {
 }
 
 
+class SummaryStore: ObservableObject {
+    @Published var summaries: [ExamSummary] = []
+    
+    func addSummary(_ summary: ExamSummary) {
+        summaries.insert(summary, at: 0)
+    }
+}
 
 
 

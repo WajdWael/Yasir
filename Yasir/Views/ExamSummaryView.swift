@@ -8,10 +8,12 @@
 import SwiftUI
 
 struct ExamSummaryView: View {
+    let documentName: String // Added property
     @StateObject private var viewModel: ExamSummaryViewModel
-    
-    // Pass in the model data to the view model via the initializer
-    init(questions: [Question], stableAnswers: [UUID: [String]], selectedAnswers: [UUID: Int]) {
+    @EnvironmentObject private var examHistory: ExamHistory // Added
+        
+    init(documentName: String, questions: [Question], stableAnswers: [UUID: [String]], selectedAnswers: [UUID: Int]) {
+        self.documentName = documentName
         _viewModel = StateObject(
             wrappedValue: ExamSummaryViewModel(
                 questions: questions,
@@ -24,8 +26,8 @@ struct ExamSummaryView: View {
     var body: some View {
         ZStack {
             // Full-screen background that ignores safe area
-            Color.teal
-                .ignoresSafeArea()
+            Color.teal.ignoresSafeArea()
+            
             ScrollView {
                 VStack(spacing: 20) {
                     headerSection
@@ -42,6 +44,7 @@ struct ExamSummaryView: View {
             .toolbarBackground(Color.teal, for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
         }
+        
     }
     
     // MARK: - Header
@@ -164,19 +167,12 @@ struct ExamSummaryView_Previews: PreviewProvider {
     
     // The preview shows the ExamSummaryView in both light and dark modes.
     static var previews: some View {
-        Group {
             ExamSummaryView(
-                questions: sampleQuestions,
-                stableAnswers: sampleStableAnswers,
-                selectedAnswers: sampleSelectedAnswers
-            )
-            
-            ExamSummaryView(
+                documentName: "Sample Document", // Add this line
                 questions: sampleQuestions,
                 stableAnswers: sampleStableAnswers,
                 selectedAnswers: sampleSelectedAnswers
             )
             .preferredColorScheme(.dark)
         }
-    }
 }

@@ -20,10 +20,12 @@ class ExamSummaryViewModel: ObservableObject {
     var correctAnswersCount: Int {
         questions.reduce(0) { count, question in
             guard let selectedIndex = selectedAnswers[question.id],
-                  let answers = stableAnswers[question.id]
-            else { return count }
-            
-            return count + (answers[selectedIndex] == question.correctAnswer ? 1 : 0)
+                  let selectedAnswer = stableAnswers[question.id]?[selectedIndex] else {
+                return count
+            }
+            // Directly use non-optional correctAnswer
+            let correctAnswer = question.correctAnswer
+            return count + (selectedAnswer == correctAnswer ? 1 : 0)
         }
     }
     
@@ -61,4 +63,6 @@ class ExamSummaryViewModel: ObservableObject {
         
         return answer == answers[selectedIndex] && answer != question.correctAnswer
     }
+    
+    
 }

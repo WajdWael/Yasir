@@ -26,6 +26,25 @@ class ExamViewModel: ObservableObject {
         Double(questions.count)
     }
     
+    // MARK: - Computed Properties for History Tracking
+    var correctAnswersCount: Int {
+        questions.reduce(0) { count, question in
+            // Remove 'correctAnswer' from the guard (it's non-optional)
+            guard let selectedIndex = selectedAnswers[question.id],
+                  let selectedAnswer = stableAnswers[question.id]?[selectedIndex] else {
+                return count
+            }
+            // Directly access non-optional correctAnswer
+            let correctAnswer = question.correctAnswer
+            return count + (selectedAnswer == correctAnswer ? 1 : 0)
+        }
+    }
+    
+    var totalQuestions: Int {
+        questions.count
+    }
+    
+    // MARK: - Navigation Methods
     func nextQuestion() {
         currentQuestionIndex = min(currentQuestionIndex + 1, questions.count)
     }
