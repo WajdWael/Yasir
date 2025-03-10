@@ -478,7 +478,7 @@ struct ServicesView: View {
                 
                 // Exam history list (added section)
                 List {
-                    ForEach(examHistory.pastExams) { exam in
+                    ForEach(examHistory.pastExams.filter { $0.documentName == document.name }) { exam in
                         NavigationLink(destination: ExamSummaryView(
                             documentName: exam.documentName,
                             questions: exam.questions,
@@ -496,8 +496,13 @@ struct ServicesView: View {
                         }
                     }
                     .onDelete { offsets in
-                        deleteOffsets = offsets
-                        showingDeleteAlert = true
+                        // Remove specific exams for this document
+                        let examsToRemove = examHistory.pastExams
+                            .filter { $0.documentName == document.name }
+                            .enumerated()
+                            .compactMap { offsets.contains($0.offset) ? $0.element.id : nil }
+                        
+                        examHistory.pastExams.removeAll { examsToRemove.contains($0.id) }
                     }
                 }
                 .listStyle(PlainListStyle())
