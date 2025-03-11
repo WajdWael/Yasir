@@ -438,6 +438,7 @@ struct ServicesView: View {
     @State private var isGenerating = false
     @State private var navigateToExam = false
     @State private var navigateToSummary = false
+    @State private var navigateToPodcast = false
     @State private var generatedExam: String = ""
     @State private var examQuestions: [Question] = []
     @State private var generatedSummary: String = ""
@@ -468,7 +469,7 @@ struct ServicesView: View {
                         startExamGeneration()
                     }
                     ServiceButton(title: "Podcast", icon: "mic") {
-                        print("Podcast feature coming soon!")
+                        navigateToPodcast = true
                     }
                 }
                 
@@ -549,6 +550,11 @@ struct ServicesView: View {
                     .id(examQuestions.count),
                     isActive: $navigateToExam
                 ) {
+                    EmptyView()
+                }
+                
+                // Navigate to the podcast view
+                NavigationLink(destination: PodcastView(document: document), isActive: $navigateToPodcast) {
                     EmptyView()
                 }
             }

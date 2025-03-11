@@ -9,7 +9,7 @@
 import Foundation
 
 class GeminiService {
-    private let apiKey: String = "AIzaSyBot7gWxANXlg1vIZ3wcIZKNSB064YzWOM"
+    private let apiKey: String = "API KEY"
     private let baseURL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
     
     func processText(content: String, type: ProcessType) async throws -> String {
@@ -86,6 +86,15 @@ class GeminiService {
                 \(content)
                 """
             }
+            
+        case .podcast:
+            prompt = """
+            Write a fun and engaging podcast script for Yassir's podcast in a conversational tone. Keep it light, humorous, and easy to follow for a general audience. Focus on key points while keeping it concise. Exclude intros, outros, titles, names, and any use of asterisks. Ensure the total byte size (including the prompt and script) does not exceed 5000 bytes
+
+
+            Text:
+            \(content)
+            """
         }
         
         let requestBody: [String: Any] = [
@@ -147,4 +156,5 @@ struct GeminiResponse: Codable {
 enum ProcessType {
     case summary
     case questions
+    case podcast
 }
