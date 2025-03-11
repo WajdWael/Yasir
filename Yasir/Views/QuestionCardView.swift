@@ -26,7 +26,11 @@ struct QuestionCardView: View {
                 correctAnswer: question.correctAnswer,
                 selectedAnswerIndex: Binding(
                     get: { viewModel.selectedAnswers[question.id] },
-                    set: { viewModel.selectAnswer(for: question.id, index: $0!) }
+                    set: { newValue in
+                        if newValue != nil {
+                            viewModel.selectAnswer(for: question.id, index: newValue!)
+                        }
+                    }
                 )
             )
             

@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		61AEA53D2D8044B60070C4DA /* RiveRuntime in Frameworks */ = {isa = PBXBuildFile; productRef = 61AEA53C2D8044B60070C4DA /* RiveRuntime */; };
+		1BDFBB352D80617400C63354 /* RiveRuntime in Frameworks */ = {isa = PBXBuildFile; productRef = 1BDFBB342D80617400C63354 /* RiveRuntime */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -27,7 +27,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				61AEA53D2D8044B60070C4DA /* RiveRuntime in Frameworks */,
+				1BDFBB352D80617400C63354 /* RiveRuntime in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -70,7 +70,7 @@
 			);
 			name = Yasir;
 			packageProductDependencies = (
-				61AEA53C2D8044B60070C4DA /* RiveRuntime */,
+				1BDFBB342D80617400C63354 /* RiveRuntime */,
 			);
 			productName = Yasir;
 			productReference = 8BDDEDA12D771B1B00541725 /* Yasir.app */;
@@ -101,7 +101,7 @@
 			mainGroup = 8BDDED982D771B1B00541725;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				61AEA53B2D8044B60070C4DA /* XCRemoteSwiftPackageReference "rive-ios" */,
+				1BDFBB332D80617400C63354 /* XCRemoteSwiftPackageReference "rive-ios" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 8BDDEDA22D771B1B00541725 /* Products */;
@@ -261,7 +261,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"Yasir/Preview Content\"";
-				DEVELOPMENT_TEAM = V8R7AQUJ49;
+				DEVELOPMENT_TEAM = NKHQR6PTCD;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -274,7 +274,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.yomnaa.Yasir;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.Wajd-Wael.Yasir";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -290,7 +290,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"Yasir/Preview Content\"";
-				DEVELOPMENT_TEAM = V8R7AQUJ49;
+				DEVELOPMENT_TEAM = NKHQR6PTCD;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -303,7 +303,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.yomnaa.Yasir;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.Wajd-Wael.Yasir";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -335,7 +335,7 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		61AEA53B2D8044B60070C4DA /* XCRemoteSwiftPackageReference "rive-ios" */ = {
+		1BDFBB332D80617400C63354 /* XCRemoteSwiftPackageReference "rive-ios" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/rive-app/rive-ios";
 			requirement = {
@@ -346,9 +346,9 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		61AEA53C2D8044B60070C4DA /* RiveRuntime */ = {
+		1BDFBB342D80617400C63354 /* RiveRuntime */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 61AEA53B2D8044B60070C4DA /* XCRemoteSwiftPackageReference "rive-ios" */;
+			package = 1BDFBB332D80617400C63354 /* XCRemoteSwiftPackageReference "rive-ios" */;
 			productName = RiveRuntime;
 		};
 /* End XCSwiftPackageProductDependency section */

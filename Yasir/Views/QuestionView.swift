@@ -7,47 +7,55 @@ struct QuestionView: View {
     @Binding var selectedAnswerIndex: Int?
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 20) {
+        VStack(alignment: .leading, spacing: 16) {
             Text(question)
                 .font(.title2)
                 .fontWeight(.semibold)
                 .foregroundColor(.black)
+                .lineLimit(nil)
             
             ForEach(answers.indices, id: \.self) { index in
-                Button(action: { selectedAnswerIndex = index }) {
+                Button(action: {
+                    if selectedAnswerIndex == nil {
+                        selectedAnswerIndex = index
+                    }
+                }) {
                     HStack {
                         Text(answers[index])
                             .foregroundColor(.black)
+                            .lineLimit(nil) // Allow unlimited lines
+                            .fixedSize(horizontal: false, vertical: true) // Enable vertical growth
+                            .multilineTextAlignment(.leading) // Force leading alignment
+                            .layoutPriority(1)
                         Spacer()
+                        if selectedAnswerIndex == index {
+                            Image(systemName: "circle.fill")
+                                .foregroundColor(iconColor(for: answers[index]))
+                        }
                         
-//                        if let selectedIndex = selectedAnswerIndex, selectedIndex == index {
-//                            if answers[index] == correctAnswer {
-//                                Image(systemName: "checkmark.circle.fill")
-//                                    .foregroundColor(.green)
-//                            } else {
-//                                Image(systemName: "xmark.circle.fill")
-//                                    .foregroundColor(.red)
-//                            }
-//                        }
                     }
                     .padding()
-                    .background(backgroundColor(for: index))
+                    .background(background(for: answers[index], at: index))
                     .cornerRadius(8)
                 }
-                .buttonStyle(.plain)
+                .disabled(selectedAnswerIndex != nil)
             }
         }
     }
     
-    private func backgroundColor(for index: Int) -> Color {
-        guard let selectedIndex = selectedAnswerIndex else { return Color.white }
-        
-        if selectedIndex == index {
-            return answers[index] == correctAnswer ?
-                Color.green.opacity(0.2) : Color.red.opacity(0.2)
-        } else if selectedIndex != index && answers[index] == correctAnswer && answers[selectedIndex] != correctAnswer {
-            return Color.green.opacity(0.2)
+    private func iconColor(for answer: String) -> Color {
+        answer == correctAnswer ? .green : .red
+    }
+    
+    private func background(for answer: String, at index: Int) -> Color {
+        if selectedAnswerIndex != nil {
+            if answer == correctAnswer {
+                return Color.green.opacity(0.1)
+            }
+            if selectedAnswerIndex == index && answer != correctAnswer {
+                return Color.red.opacity(0.1)
+            }
         }
-        return Color.white
+        return Color.clear
     }
 }

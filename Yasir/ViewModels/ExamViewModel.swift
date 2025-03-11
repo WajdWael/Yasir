@@ -54,7 +54,9 @@ class ExamViewModel: ObservableObject {
     }
     
     func selectAnswer(for questionID: UUID, index: Int) {
-        selectedAnswers[questionID] = index
+        if selectedAnswers[questionID] == nil {
+            selectedAnswers[questionID] = index
+        }
     }
     
     func animateAndAdvance() {

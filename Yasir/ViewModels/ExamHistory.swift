@@ -24,8 +24,14 @@ class ExamHistory: ObservableObject {
     }
     
     func addExam(_ exam: ExamSummary) {
+        // Filter exams for the current document
+        let documentExams = pastExams.filter { $0.documentName == exam.documentName }
+        
+        // Assign the next exam number for this document
         var newExam = exam
-        newExam.examNumber = pastExams.count + 1
+        newExam.examNumber = documentExams.count + 1
+        
+        // Add the updated exam to the history
         pastExams.append(newExam)
     }
     

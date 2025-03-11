@@ -10,7 +10,7 @@ import Foundation
 import AVFoundation
 
 class GoogleTTSService {
-    private let apiKey: String = "API KEY" // Replace with your Google TTS API key
+    private let apiKey: String = "API_KEY" // Replace with your Google TTS API key
     private let ttsURL = "https://texttospeech.googleapis.com/v1/text:synthesize"
 
     func synthesizeSpeech(text: String, completion: @escaping (URL?) -> Void) {
