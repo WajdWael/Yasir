@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		61AEA53D2D8044B60070C4DA /* RiveRuntime in Frameworks */ = {isa = PBXBuildFile; productRef = 61AEA53C2D8044B60070C4DA /* RiveRuntime */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		8BDDEDA12D771B1B00541725 /* Yasir.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Yasir.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -23,6 +27,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				61AEA53D2D8044B60070C4DA /* RiveRuntime in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -65,6 +70,7 @@
 			);
 			name = Yasir;
 			packageProductDependencies = (
+				61AEA53C2D8044B60070C4DA /* RiveRuntime */,
 			);
 			productName = Yasir;
 			productReference = 8BDDEDA12D771B1B00541725 /* Yasir.app */;
@@ -94,6 +100,9 @@
 			);
 			mainGroup = 8BDDED982D771B1B00541725;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				61AEA53B2D8044B60070C4DA /* XCRemoteSwiftPackageReference "rive-ios" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 8BDDEDA22D771B1B00541725 /* Products */;
 			projectDirPath = "";
@@ -324,6 +333,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		61AEA53B2D8044B60070C4DA /* XCRemoteSwiftPackageReference "rive-ios" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/rive-app/rive-ios";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 6.7.2;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		61AEA53C2D8044B60070C4DA /* RiveRuntime */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 61AEA53B2D8044B60070C4DA /* XCRemoteSwiftPackageReference "rive-ios" */;
+			productName = RiveRuntime;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 8BDDED992D771B1B00541725 /* Project object */;
 }

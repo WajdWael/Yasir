@@ -55,7 +55,7 @@ struct YasirApp: App {
     var body: some Scene {
         WindowGroup {
             if isSplashActive {
-                SplashView()
+                Splash_Screen()
                     .onAppear {
                         DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
                             isSplashActive = false
