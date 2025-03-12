@@ -1,14 +1,3 @@
-//import SwiftUI
-//
-//struct SelectedFileView: View {
-//    var body: some View {
-//        Text("Hello, World!")
-//    }
-//}
-//
-//#Preview {
-//    SelectedFileView()
-//}
 import SwiftUI
 import SwiftData
 
@@ -32,7 +21,7 @@ struct FilesView: View {
         NavigationStack {
             ZStack {
                 if viewModel.documents.isEmpty {
-                    ContentView(viewModel:viewModel) // Show empty state if no files exist
+                    UploadedFilesView(viewModel:viewModel) // Show empty state if no files exist
                 } else {
                     VStack {
                         // Title and filter icon
@@ -109,8 +98,6 @@ struct FilesView: View {
                 // Floating "+" Button for Upload
                 VStack {
                     Spacer()
-                    
-                        
                         Button(action: {
                             viewModel.isDocumentPickerPresented = true
                         }) {
@@ -120,10 +107,8 @@ struct FilesView: View {
                                 .padding()
                                 .background(Color.teal)
                                 .clipShape(Circle())
-                                .shadow(radius: 5)
                         }
                         .padding()
-                    
                 }
             }
             .sheet(isPresented: $viewModel.isDocumentPickerPresented) {

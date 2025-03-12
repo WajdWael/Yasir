@@ -11,7 +11,7 @@
 //}
 import SwiftUI
 
-struct ContentView: View {
+struct UploadedFilesView: View {
     
     @ObservedObject var viewModel: DocumentViewModel
     
@@ -29,26 +29,25 @@ struct ContentView: View {
             Spacer()
             
             // Logo Placeholder
-            RoundedRectangle(cornerRadius: 10)
-                .fill(Color.gray.opacity(0.3))
-                .frame(width: 150, height: 100)
-                .overlay(
-                    Text("Logo")
-                        .foregroundColor(.gray)
-                        .font(.headline)
-                )
 
+            Image(systemName: "doc.fill.badge.plus")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 70, height: 70)
+                .foregroundColor(Color(UIColor.systemGray2))
+            
             // Upload Text
-            Text("Upload files to get started")
+            Text("Upload files to get started.")
+                .font(.title2)
                 .foregroundColor(.gray)
                 .padding(.top, 8)
 
              Spacer()
          
-        } .background(Color.gray.opacity(0.2))
-
+        }
+        .background(Color(UIColor.systemGray6))
     }
-    }
+}
 
 
 

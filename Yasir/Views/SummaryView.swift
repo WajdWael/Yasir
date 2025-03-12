@@ -36,8 +36,6 @@ struct SummaryView: View {
     }
 }
 
-struct SummaryView_Previews: PreviewProvider {
-    static var previews: some View {
-        SummaryView(summary: "This is a sample summary of the document. It should contain a brief and concise description of the content.")
-    }
+#Preview {
+    SummaryView(summary: "This is a sample summary of the document. It should contain a brief and concise description of the content.")
 }
