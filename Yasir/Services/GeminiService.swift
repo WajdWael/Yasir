@@ -9,7 +9,7 @@
 import Foundation
 
 class GeminiService {
-    private let apiKey: String = "API_KEY" // Replace with API_KEY
+    private let apiKey: String = "AIzaSyD8zftb6_ZeSUK08wq3JfsQ0BOe1trG5sA" // Replace with API_KEY
     private let baseURL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
     
     func processText(content: String, type: ProcessType) async throws -> String {

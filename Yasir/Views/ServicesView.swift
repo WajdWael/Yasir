@@ -445,15 +445,27 @@ struct ServicesView: View {
     @State private var errorMessage: String?
     let geminiService = GeminiService()
     @EnvironmentObject var examHistory: ExamHistory // Add this line
-    
+    @EnvironmentObject var summaryViewModel: SummaryViewModel 
+    @State private var isSummaryGenerated = false
     @State private var showingDeleteAlert = false
     @State private var deleteOffsets: IndexSet?
 
     @Environment(\.dismiss) var dismiss
     
     var body: some View {
+        
+        // Check if the summary has been generated for this document
+        let isEnabled = !summaryViewModel.isSummaryGenerated(for: document.name)
         NavigationStack {
-            VStack {
+            
+            
+            ZStack{
+            
+                Color(.secondarySystemBackground)
+                .edgesIgnoringSafeArea(.all)
+                
+                
+            VStack (alignment: .leading){
                 Text(document.name)
                     .font(.largeTitle)
                     .bold()
@@ -466,21 +478,67 @@ struct ServicesView: View {
                     .foregroundColor(.gray)
                     .padding(.top, 10)
                 
-                HStack {
-                    ServiceButton(title: "Exam", icon: "doc.text") {
+                HStack{
+                    Button(action: {
                         startExamGeneration()
+                    }){
+                        HStack{
+                            
+                            Image(systemName: "doc.text")
+                            Text("Exam")
+                                .bold()
+                        }.frame(width: 160, height: 50)
+                            .background(Color.teal)
+                            .foregroundColor(.white)
+                            .cornerRadius(10)
+                            .padding(.vertical, 5)
+                        
                     }
-                    ServiceButton(title: "Podcast", icon: "mic") {
+                    
+                    Button(action: {
                         navigateToPodcast = true
+                    }){
+                        HStack{
+                            
+                            Image(systemName: "mic")
+                            Text("Podcast")
+                                .bold()
+                            
+                        }.frame(width: 160, height: 50)
+                            .background(Color.teal)
+                            .foregroundColor(.white)
+                            .cornerRadius(10)
+                            .padding(.vertical, 5)
+                        
                     }
                 }
                 
-                ServiceButton(title: "Summary", icon: "doc.on.clipboard") {
-                    startSummaryGeneration()
+                Button(action: {
+                    if !summaryViewModel.isSummaryGenerated(for: document.name) {
+                        startSummaryGeneration()
+                    }
+                }){
+                    HStack{
+                        
+                        Image(systemName: "doc.on.clipboard")
+                        Text("Summary")
+                            .bold()
+                        
+                    }.frame(width: 160, height: 50)
+                    //.background(Color.teal)
+                        .background(summaryViewModel.isSummaryGenerated(for: document.name) ? Color.gray.opacity(0.3) : Color.teal)
+                        .foregroundColor(.white)
+                        .disabled(summaryViewModel.isSummaryGenerated(for: document.name))
+                        .cornerRadius(10)
+                        .padding(.vertical, 5)
+                    
                 }
                 
-                // Exam history list (added section)
+                
+                
+                
                 List {
+                    // Display past exams
                     ForEach(examHistory.pastExams.filter { $0.documentName == document.name }) { exam in
                         NavigationLink(destination: ExamSummaryView(
                             documentName: exam.documentName,
@@ -507,18 +565,28 @@ struct ServicesView: View {
                         
                         examHistory.pastExams.removeAll { examsToRemove.contains($0.id) }
                     }
-                }
-                .listStyle(PlainListStyle())
-                .alert("Delete Exam?", isPresented: $showingDeleteAlert) {
-                    Button("Delete", role: .destructive) {
-                        if let offsets = deleteOffsets {
-                            examHistory.removeExams(at: offsets)
+                    
+                    
+                    ForEach(summaryViewModel.generatedSummaries.filter { $0.documentName == document.name }) { summary in
+                        NavigationLink(destination: SummaryView(summary: summary.summaryText, document: document)) {
+                            VStack(alignment: .leading) {
+                                Text("Summary for \(summary.documentName)")
+                                    .font(.headline)
+                                Text(summary.date, style: .date)
+                                    .font(.caption)
+                            }
                         }
                     }
-                    Button("Cancel", role: .cancel) {}
-                } message: {
-                    Text("This action cannot be undone.")
-                }
+                    .onDelete { offsets in
+                        // Remove specific summaries for this document
+                        summaryViewModel.deleteSummary(at: offsets, for: document.name)
+                    }
+                }.scrollContentBackground(.hidden)
+                
+                   
+                
+                
+                
                 
                 Spacer()
                 
@@ -526,6 +594,7 @@ struct ServicesView: View {
                     ProgressView("Generating...")
                         .progressViewStyle(CircularProgressViewStyle())
                         .padding(.top, 20)
+                        .frame(maxWidth: .infinity, alignment: .center)
                 }
                 
                 if let errorMessage = errorMessage {
@@ -534,14 +603,15 @@ struct ServicesView: View {
                         .padding(.top, 10)
                 }
                 
-                if !generatedSummary.isEmpty {
-                    NavigationLink(destination: SummaryView(summary: generatedSummary)) {
-                        Text("Go to Summary")
-                            .font(.headline)
-                            .foregroundColor(.teal)
-                            .padding(.top, 20)
-                    }
+                
+                
+                NavigationLink(
+                    destination: SummaryView(summary: generatedSummary, document: document),
+                    isActive: $navigateToSummary
+                ) {
+                    EmptyView()
                 }
+                
                 
                 NavigationLink(
                     destination: ExamView(
@@ -560,18 +630,26 @@ struct ServicesView: View {
                     EmptyView()
                 }
             }
+            
             .padding()
+            .padding(.horizontal)
         }
+            
+        }
+//<<<<<<< Updated upstream
         .navigationBarBackButtonHidden(true)
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
                 Button(action: { dismiss() }) {
                     Image(systemName: "chevron.left")
-                        .foregroundColor(.white)
+                        .foregroundColor(.teal)
                         .bold()
                 }
             }
         }
+//=======
+//       
+//>>>>>>> Stashed changes
     }
     
     // Function to start generating an exam
@@ -620,9 +698,14 @@ struct ServicesView: View {
             do {
                 let result = try await geminiService.processText(content: text, type: .summary)
                 DispatchQueue.main.async {
+//
                     generatedSummary = result
-                    isGenerating = false
-                    navigateToSummary = true
+                     // Save the generated summary to the view model
+                    let newSummary = GeneratedSummary(documentName: document.name, summaryText: result, date: Date())
+                        summaryViewModel.addSummary(newSummary)
+                        //summaryViewModel.saveSummary(newSummary)
+                        isGenerating = false
+                        navigateToSummary = true
                 }
             } catch {
                 DispatchQueue.main.async {
@@ -669,6 +752,7 @@ struct ServiceButton: View {
     let title: String
     let icon: String
     let action: () -> Void
+    
 
     var body: some View {
         Button(action: action) {
@@ -697,9 +781,3 @@ class SummaryStore: ObservableObject {
 
 
 
-//// Preview
-//struct ServicesView_Previews: PreviewProvider {
-//    static var previews: some View {
-//        ServicesView(document: Document(name: "Sample Document", extractedText: "This is a sample text for summary generation"))
-//    }
-//}

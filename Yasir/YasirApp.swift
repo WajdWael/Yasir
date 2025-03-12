@@ -41,6 +41,7 @@ import SwiftData
 @main
 struct YasirApp: App {
     @StateObject private var examHistory = ExamHistory()
+    @StateObject private var summaryViewModel = SummaryViewModel()
     @AppStorage("hasSeenOnboarding") private var hasSeenOnboarding = false
     @State private var isSplashActive = true
     
@@ -65,6 +66,7 @@ struct YasirApp: App {
                 if hasSeenOnboarding {
                     FilesView(modelContext: sharedModelContainer.mainContext)
                         .environmentObject(examHistory)
+                        .environmentObject(summaryViewModel)
                 } else {
                     OnBoardingView()
                 }

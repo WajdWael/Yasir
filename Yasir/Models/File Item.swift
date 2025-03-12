@@ -38,7 +38,7 @@ import Foundation
 import SwiftData
 
 @Model
-class Document {
+class Document: ObservableObject {
     var name: String
     var pdfData: Data
     var extractedText: String?

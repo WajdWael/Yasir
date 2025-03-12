@@ -15,23 +15,58 @@ import SwiftUI
 
 struct SummaryView: View {
     let summary: String
+//<<<<<<< Updated upstream
     @Environment(\.dismiss) var dismiss
 
+//=======
+    @ObservedObject var document : Document
+    
+//>>>>>>> Stashed changes
     var body: some View {
-        VStack {
-            Text("Summary")
-                .font(.largeTitle)
-                .bold()
-                .padding(.top, 20)
+        
+        ZStack{
+            Color(.systemTeal).ignoresSafeArea()
             
-            ScrollView {
-                Text(summary)
+            VStack (alignment: .leading, spacing: 10){
+                
+                Text(document.name)
+                    .font(.title)
+                    .bold()
+                    .foregroundColor(.white)
                     .padding()
-                    .foregroundColor(.gray)
+                
+                Text("Summary:")
+                    .font(.callout)
+                    .foregroundColor(.white)
+                    .padding(.horizontal)
+                
+                VStack{
+                ScrollView {
+                    
+                   
+                        Text(summary)
+                            .padding()
+                            .foregroundColor(.black)
+                    }
+                    
+                .frame(width: 356.38, height: 542)
+                    .background(Color.white)
+                    .cornerRadius(20)
+                    .padding(.top, 5)
+                    
+                }.frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(Color.white)
+                    .cornerRadius(20)
+                   // .padding()
+                    .padding(.horizontal)
+                
+                Spacer()
             }
             
-            Spacer()
+            .padding(.horizontal)
+            .padding()
         }
+//<<<<<<< Updated upstream
        
         .padding()
         .navigationBarBackButtonHidden(true)
@@ -47,6 +82,15 @@ struct SummaryView: View {
     }
 }
 
-#Preview {
-    SummaryView(summary: "This is a sample summary of the document. It should contain a brief and concise description of the content.")
-}
+//#Preview {
+//    SummaryView(summary: "This is a sample summary of the document. It should contain a brief and concise description of the content.")
+//}
+//=======}
+
+
+//struct SummaryView_Previews: PreviewProvider {
+//    static var previews: some View {
+//        SummaryView(summary: "This is a sample summary of the document. It should contain a brief and concise description of the content.")
+//    }
+//}
+//>>>>>>> Stashed changes
