@@ -12,9 +12,9 @@
 import SwiftUI
 
 struct UploadedFilesView: View {
-    
     @ObservedObject var viewModel: DocumentViewModel
-    
+    @Environment(\.dismiss) var dismiss
+
     var body: some View {
         VStack {
             // Title
@@ -29,7 +29,6 @@ struct UploadedFilesView: View {
             Spacer()
             
             // Logo Placeholder
-
             Image(systemName: "doc.fill.badge.plus")
                 .resizable()
                 .scaledToFit()
@@ -44,6 +43,16 @@ struct UploadedFilesView: View {
 
              Spacer()
          
+        }
+        .navigationBarBackButtonHidden(true)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button(action: { dismiss() }) {
+                    Image(systemName: "chevron.left")
+                        .foregroundColor(.white)
+                        .bold()
+                }
+            }
         }
         .background(Color(UIColor.systemGray6))
     }

@@ -13,7 +13,7 @@ struct QuestionCardView: View {
     let interactive: Bool
     private let cardWidth: CGFloat = 370
     private let cardHeight: CGFloat = 570
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
             if interactive {

@@ -2,6 +2,7 @@ import SwiftUI
 
 struct PodcastView: View {
     @StateObject private var viewModel: PodcastViewModel
+    @Environment(\.dismiss) var dismiss
 
     init(document: Document) {
         self._viewModel = StateObject(wrappedValue: PodcastViewModel(document: document))
@@ -64,7 +65,7 @@ struct PodcastView: View {
                 Button(action: { viewModel.skipBackward(seconds: 10) }) {
                     Image(systemName: "gobackward.10")
                         .resizable()
-                        .frame(width: 30, height: 30)
+                        .frame(width: 30, height: 35)
                         .foregroundColor(.teal)
                 }
 
@@ -83,7 +84,7 @@ struct PodcastView: View {
                 Button(action: { viewModel.skipForward(seconds: 10) }) {
                     Image(systemName: "goforward.10")
                         .resizable()
-                        .frame(width: 30, height: 30)
+                        .frame(width: 30, height: 35)
                         .foregroundColor(.teal)
                 }
             }
@@ -124,10 +125,16 @@ struct PodcastView: View {
             // Pause audio when the view disappears
             viewModel.pauseAudio()
         }
+        .navigationBarBackButtonHidden(true)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button(action: { dismiss() }) {
+                    Image(systemName: "chevron.left")
+                        .foregroundColor(.white)
+                        .bold()
+                }
+            }
+        }
         
     }
 }
-
-//#Preview {
-//    PodcastView()
-//}

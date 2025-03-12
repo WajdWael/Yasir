@@ -449,6 +449,8 @@ struct ServicesView: View {
     @State private var showingDeleteAlert = false
     @State private var deleteOffsets: IndexSet?
 
+    @Environment(\.dismiss) var dismiss
+    
     var body: some View {
         NavigationStack {
             VStack {
@@ -560,7 +562,16 @@ struct ServicesView: View {
             }
             .padding()
         }
-        .tint(.white)
+        .navigationBarBackButtonHidden(true)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button(action: { dismiss() }) {
+                    Image(systemName: "chevron.left")
+                        .foregroundColor(.white)
+                        .bold()
+                }
+            }
+        }
     }
     
     // Function to start generating an exam

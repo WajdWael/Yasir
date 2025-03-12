@@ -15,7 +15,8 @@ import SwiftUI
 
 struct SummaryView: View {
     let summary: String
-    
+    @Environment(\.dismiss) var dismiss
+
     var body: some View {
         VStack {
             Text("Summary")
@@ -33,6 +34,16 @@ struct SummaryView: View {
         }
        
         .padding()
+        .navigationBarBackButtonHidden(true)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button(action: { dismiss() }) {
+                    Image(systemName: "chevron.left")
+                        .foregroundColor(.white)
+                        .bold()
+                }
+            }
+        }
     }
 }
 

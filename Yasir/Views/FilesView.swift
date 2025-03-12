@@ -4,7 +4,7 @@ import SwiftData
 struct FilesView: View {
     @StateObject private var viewModel: DocumentViewModel
     @State private var searchText: String = ""
-    
+
     init(modelContext: ModelContext) {
         _viewModel = StateObject(wrappedValue: DocumentViewModel(modelContext: modelContext))
     }
@@ -31,14 +31,6 @@ struct FilesView: View {
                                 .fontWeight(.bold)
                             
                             Spacer()
-                            
-                            Button(action: {
-                                print("Filter tapped") // Future sorting feature
-                            }) {
-                                Image(systemName: "line.horizontal.3.decrease.circle")
-                                    .font(.title2)
-                                    .foregroundColor(.gray)
-                            }
                         }
                         .padding(.horizontal)
                         
@@ -49,7 +41,7 @@ struct FilesView: View {
                             
                             TextField("Search", text: $searchText)
                                 .textFieldStyle(PlainTextFieldStyle())
-                            
+                                
                             Button(action: {
                                 print("Voice search tapped")
                             }) {
@@ -117,6 +109,12 @@ struct FilesView: View {
                 }
             }
         }
+        
+        
+        
+        
+        
+        
     }
 }
 

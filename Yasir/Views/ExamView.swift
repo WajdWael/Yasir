@@ -11,7 +11,8 @@ struct ExamView: View {
     let documentName: String
         @StateObject private var viewModel: ExamViewModel
         @EnvironmentObject private var examHistory: ExamHistory
-        
+        @Environment(\.dismiss) var dismiss
+
         init(documentName: String, questions: [Question]) {
             self.documentName = documentName
             _viewModel = StateObject(wrappedValue: ExamViewModel(questions: questions))
@@ -48,6 +49,16 @@ struct ExamView: View {
                 Spacer()
             }
             .background(Color.teal.ignoresSafeArea())
+            .navigationBarBackButtonHidden(true)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button(action: { dismiss() }) {
+                        Image(systemName: "chevron.left")
+                            .foregroundColor(.white)
+                            .bold()
+                    }
+                }
+            }
         }
     
     private var progressSection: some View {
@@ -97,8 +108,6 @@ extension View {
         self.offset(y: CGFloat(position) * 10)
     }
 }
-
-
 
 
 struct ExamView_Previews: PreviewProvider {

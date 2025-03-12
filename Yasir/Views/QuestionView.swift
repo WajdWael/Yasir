@@ -5,7 +5,7 @@ struct QuestionView: View {
     let answers: [String]
     let correctAnswer: String
     @Binding var selectedAnswerIndex: Int?
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             Text(question)

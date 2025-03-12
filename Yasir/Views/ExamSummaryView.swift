@@ -11,7 +11,8 @@ struct ExamSummaryView: View {
     let documentName: String // Added property
     @StateObject private var viewModel: ExamSummaryViewModel
     @EnvironmentObject private var examHistory: ExamHistory // Added
-        
+    @Environment(\.dismiss) var dismiss
+
     init(documentName: String, questions: [Question], stableAnswers: [UUID: [String]], selectedAnswers: [UUID: Int]) {
         self.documentName = documentName
         _viewModel = StateObject(
@@ -44,7 +45,6 @@ struct ExamSummaryView: View {
             .toolbarBackground(Color.teal, for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
         }
-        
     }
     
     // MARK: - Header
@@ -60,6 +60,16 @@ struct ExamSummaryView: View {
                 .foregroundColor(.white)
         }
         .padding(.vertical, 20)
+        .navigationBarBackButtonHidden(true)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button(action: { dismiss() }) {
+                    Image(systemName: "chevron.left")
+                        .foregroundColor(.white)
+                        .bold()
+                }
+            }
+        }
     }
     
     // MARK: - Question Card
