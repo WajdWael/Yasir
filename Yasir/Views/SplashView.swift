@@ -27,9 +27,6 @@ struct Splash_Screen: View {
                
                 riveViewModel.view()
                     .frame(width: 300, height: 300)
-                    
-
-
             }
         }
     }
