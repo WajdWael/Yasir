@@ -1,36 +1,35 @@
 import SwiftUI
-
 struct PodcastView: View {
     @StateObject private var viewModel: PodcastViewModel
-    @Environment(\.dismiss) var dismiss
 
     init(document: Document) {
         self._viewModel = StateObject(wrappedValue: PodcastViewModel(document: document))
     }
 
     var body: some View {
-        VStack(spacing: 20){
-         if viewModel.isLoading{
+        VStack(spacing: 20) {
+            // Display the script only when the audio is ready to play
+            if viewModel.finalAudioURL != nil && !viewModel.generatedPodcast.isEmpty {
+                ScrollView {
+                    Text(viewModel.generatedPodcast)
+                        .padding()
+                }
+                .frame(maxWidth: .infinity, maxHeight: 400)
+                .background(Color(.systemGray6))
+                .cornerRadius(10)
+                .padding()
+            } else {
+                // Show "Generating Podcast..." when the audio is being prepared
                 ScrollView {
                     ProgressView("Generating Podcast...")
-                        .progressViewStyle(CircularProgressViewStyle(tint: .teal)).padding(.top, 100)
-                    
+                        .progressViewStyle(CircularProgressViewStyle(tint: .teal))
+                        .padding(.top, 170)
                 }
-                .frame(maxWidth: .infinity, maxHeight: 300)
+                .frame(maxWidth: .infinity, maxHeight: 400)
                 .background(Color(.systemGray6))
                 .cornerRadius(10)
                 .padding(.horizontal)
-             
-            } else if !viewModel.isLoading && !viewModel.generatedPodcast.isEmpty {
-                    ScrollView {
-                        Text(viewModel.generatedPodcast)
-                            .padding()
-                    }
-                    .frame(maxWidth: .infinity, maxHeight: 300)
-                    .background(Color(.systemGray6))
-                    .cornerRadius(10)
-                    .padding()
-                }
+            }
 
             // Progress Slider
             Slider(value: $viewModel.progress, in: 0...1, onEditingChanged: { editing in
@@ -46,11 +45,10 @@ struct PodcastView: View {
                 Text(viewModel.currentTime)
                     .font(.caption)
                 Spacer()
-                Text(viewModel.duration)
+                Text(viewModel.remainingTime)
                     .font(.caption)
             }
             .padding(.horizontal)
-
 
             // Playback Speed Button
             Button(action: viewModel.changePlaybackRate) {
@@ -59,18 +57,18 @@ struct PodcastView: View {
                     .foregroundColor(.teal)
                     .cornerRadius(10)
             }
-            
+
             // Skip Buttons
             HStack {
                 Button(action: { viewModel.skipBackward(seconds: 10) }) {
                     Image(systemName: "gobackward.10")
                         .resizable()
-                        .frame(width: 30, height: 35)
+                        .frame(width: 30, height: 30)
                         .foregroundColor(.teal)
                 }
 
                 Spacer()
-                
+
                 // Play/Pause Button
                 Button(action: viewModel.togglePlayPause) {
                     Image(systemName: viewModel.isPlaying ? "pause.circle.fill" : "play.circle.fill")
@@ -78,18 +76,17 @@ struct PodcastView: View {
                         .frame(width: 50, height: 50)
                         .foregroundColor(.teal)
                 }
-                
+
                 Spacer()
 
                 Button(action: { viewModel.skipForward(seconds: 10) }) {
                     Image(systemName: "goforward.10")
                         .resizable()
-                        .frame(width: 30, height: 35)
+                        .frame(width: 30, height: 30)
                         .foregroundColor(.teal)
                 }
             }
             .padding(.horizontal)
-
 
             // Volume Slider
             HStack {
@@ -101,14 +98,12 @@ struct PodcastView: View {
             .padding(.horizontal)
             .foregroundStyle(.teal)
 
-
             // Error Message
             if viewModel.showError, let errorMessage = viewModel.errorMessage {
                 Text(errorMessage)
                     .foregroundColor(.red)
                     .padding()
             }
-
         }
         .padding()
         .navigationTitle("Podcast")
@@ -125,16 +120,5 @@ struct PodcastView: View {
             // Pause audio when the view disappears
             viewModel.pauseAudio()
         }
-        .navigationBarBackButtonHidden(true)
-        .toolbar {
-            ToolbarItem(placement: .navigationBarLeading) {
-                Button(action: { dismiss() }) {
-                    Image(systemName: "chevron.left")
-                        .foregroundColor(.white)
-                        .bold()
-                }
-            }
-        }
-        
     }
 }

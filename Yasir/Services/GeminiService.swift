@@ -9,7 +9,7 @@
 import Foundation
 
 class GeminiService {
-    private let apiKey: String = "AIzaSyD8zftb6_ZeSUK08wq3JfsQ0BOe1trG5sA" // Replace with API_KEY
+    private let apiKey: String = " " // Replace with API_KEY
     private let baseURL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
     
     func processText(content: String, type: ProcessType) async throws -> String {
@@ -144,7 +144,12 @@ class GeminiService {
     
     private func createPodcastPrompt(content: String) -> String {
         return """
-        Write a fun and engaging podcast script for Yassir's podcast in a conversational tone. Keep it light, humorous, and easy to follow for a general audience. Focus on key points while keeping it concise. Exclude intros, outros, titles, names, and any use of asterisks. Ensure the total byte size (including the prompt and script) does not exceed 5000 bytes
+            Write a fun and engaging podcast script for Yassir's podcast in a conversational tone. The script should be approximately 3,500–4,000 words, ensuring a spoken duration of about 35 minutes at a natural speaking pace (~150-160 words per minute).
+
+            Use a storytelling approach with detailed explanations, real-life examples, and humor to make the content engaging. Expand on topics by adding thought-provoking questions, relatable anecdotes, and conversational asides to sustain listener interest.
+
+            Ensure smooth transitions between ideas to maintain a cohesive flow. Do not include stage cues, music cues, intros, outros, titles, names, or any special formatting (such as asterisks or markdown).
+
 
         Text:
         \(content)

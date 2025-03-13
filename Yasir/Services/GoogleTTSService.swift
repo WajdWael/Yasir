@@ -5,12 +5,11 @@
 //  Created by Yomna Eisa on 11/03/2025.
 //
 
-
 import Foundation
 import AVFoundation
 
 class GoogleTTSService {
-    private let apiKey: String = "AIzaSyB4Z3TmOwdHKQRKg3FpWsmswTcnv6H5ex8" // Replace with your Google TTS API key
+    private let apiKey: String = " " // Replace with your Google TTS API key
     private let ttsURL = "https://texttospeech.googleapis.com/v1/text:synthesize"
 
     func synthesizeSpeech(text: String, completion: @escaping (URL?) -> Void) {
