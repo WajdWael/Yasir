@@ -33,21 +33,36 @@ class PodcastViewModel: ObservableObject {
     }
 
     // MARK: - Audio Controls
-
     private func initializePlayer() {
         guard let finalAudioURL = finalAudioURL else {
             print("Final audio URL is nil!")
             return
         }
         
-        // Initialize the player only if it hasn't been initialized yet
-        if player == nil {
-            player = AVPlayer(url: finalAudioURL)
-            player?.volume = volume
-            player?.rate = playbackRate
-            startTimeObserver()
-            print("Player initialized successfully with new podcast at \(finalAudioURL)")
+        // Reset the player completely
+        resetPlayer()
+        
+        // Initialize the player
+        player = AVPlayer(url: finalAudioURL)
+        player?.volume = volume
+        player?.rate = playbackRate
+        
+        // Log the player's initial state
+        if let player = player {
+            print("Player initialized with current time: \(player.currentTime().seconds)")
         }
+        
+        // Seek to the beginning with zero tolerance
+        player?.seek(to: .zero, toleranceBefore: .zero, toleranceAfter: .zero) { [weak self] finished in
+            if finished {
+                print("Player successfully seeked to the beginning.")
+                self?.startTimeObserver()
+            } else {
+                print("Failed to seek to the beginning.")
+            }
+        }
+        
+        print("Player initialized successfully with new podcast at \(finalAudioURL)")
     }
 
     private func resetPlayer() {
@@ -55,14 +70,40 @@ class PodcastViewModel: ObservableObject {
         player?.pause()
         player = nil
         print("Player reset successfully")
+        
+        // Add a small delay to ensure the player is fully reset
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            print("Player reset completed.")
+        }
     }
 
     func playAudio() {
         initializePlayer() // Ensure the player is initialized
-        player?.play()
-        isPlaying = true
-        print("Player started playing at time: \(player?.currentTime().seconds ?? 0)")
+        
+        // Add a small delay to ensure the player is ready
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+            guard let self = self else { return }
+            
+            if let player = self.player {
+                if player.currentTime().seconds > 0 {
+                    player.seek(to: .zero, toleranceBefore: .zero, toleranceAfter: .zero) { finished in
+                        if finished {
+                            player.play()
+                            self.isPlaying = true
+                            print("Player started playing at time: \(player.currentTime().seconds)")
+                        } else {
+                            print("Failed to seek to the beginning before playback.")
+                        }
+                    }
+                } else {
+                    player.play()
+                    self.isPlaying = true
+                    print("Player started playing at time: \(player.currentTime().seconds)")
+                }
+            }
+        }
     }
+
 
     func togglePlayPause() {
         guard let player = player else {
@@ -166,8 +207,32 @@ class PodcastViewModel: ObservableObject {
     private func verifyAudioFile(at url: URL) -> Bool {
         let asset = AVURLAsset(url: url)
         let duration = CMTimeGetSeconds(asset.duration)
-        print("Audio file duration: \(duration) seconds")
-        return duration > 0
+        print("Combined audio file duration: \(duration) seconds")
+        
+        // Check if the duration is valid
+        guard duration > 0 else {
+            print("Invalid audio file: duration is zero or negative.")
+            return false
+        }
+        
+        // Check if the file is playable
+        var isPlayable = false
+        let semaphore = DispatchSemaphore(value: 0)
+        
+        asset.loadValuesAsynchronously(forKeys: ["playable"]) {
+            if asset.statusOfValue(forKey: "playable", error: nil) == .loaded {
+                isPlayable = asset.isPlayable
+            }
+            semaphore.signal()
+        }
+        
+        semaphore.wait()
+        
+        if !isPlayable {
+            print("Audio file is not playable.")
+        }
+        
+        return isPlayable
     }
 
     func generateAndPlayPodcast(text: String) {
@@ -230,7 +295,7 @@ class PodcastViewModel: ObservableObject {
                                 self.finalAudioURL = outputURL
                                 self.playAudio()
                             } else {
-                                self.errorMessage = "Failed to generate audio."
+                                self.errorMessage = "Failed to generate or verify audio."
                                 self.showError = true
                             }
                         }
@@ -255,6 +320,10 @@ class PodcastViewModel: ObservableObject {
                 for fileURL in audioFiles {
                     let asset = AVURLAsset(url: fileURL)
                     
+                    // Log the duration of each audio file
+                    let duration = CMTimeGetSeconds(asset.duration)
+                    print("Inserting audio file: \(fileURL), duration: \(duration), insert time: \(CMTimeGetSeconds(insertTime))")
+                    
                     guard let track = asset.tracks(withMediaType: .audio).first else {
                         print("Skipping invalid audio file at \(fileURL)")
                         continue
@@ -265,8 +334,6 @@ class PodcastViewModel: ObservableObject {
                     try compositionTrack?.insertTimeRange(CMTimeRange(start: .zero, duration: asset.duration), of: track, at: insertTime)
                     
                     insertTime = CMTimeAdd(insertTime, asset.duration)
-                    
-                    print("Inserting audio file: \(fileURL), duration: \(asset.duration.seconds), insert time: \(insertTime.seconds)")
                 }
                 
                 let exporter = AVAssetExportSession(asset: composition, presetName: AVAssetExportPresetAppleM4A)
@@ -292,7 +359,7 @@ class PodcastViewModel: ObservableObject {
             }
         }
     }
-
+    
     func pauseAudio() {
         player?.pause()
         isPlaying = false
