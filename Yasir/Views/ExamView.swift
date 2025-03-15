@@ -18,7 +18,11 @@ struct ExamView: View {
             _viewModel = StateObject(wrappedValue: ExamViewModel(questions: questions))
         }
         
-        var body: some View {
+    var body: some View {
+        ZStack {
+            Color.teal
+                .ignoresSafeArea()
+            
             VStack(spacing: 20) {
                 if viewModel.currentQuestionIndex < viewModel.questions.count {
                     progressSection
@@ -46,20 +50,12 @@ struct ExamView: View {
                         examHistory.addExam(summary)
                     }
                 }
-                Spacer()
             }
-            .background(Color.teal.ignoresSafeArea())
             .navigationBarBackButtonHidden(true)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button(action: { dismiss() }) {
-                        Image(systemName: "chevron.left")
-                            .foregroundColor(.white)
-                            .bold()
-                    }
-                }
-            }
+            .toolbarBackground(Color.teal, for: .navigationBar)
+            .toolbarBackground(.visible, for: .navigationBar)
         }
+    }
     
     private var progressSection: some View {
         VStack(spacing: 10) {
