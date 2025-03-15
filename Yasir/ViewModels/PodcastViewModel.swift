@@ -42,7 +42,7 @@ class PodcastViewModel: ObservableObject {
         // Reset the player completely
         resetPlayer()
         
-        // Initialize the player
+        // Initialize the player with the final audio file
         player = AVPlayer(url: finalAudioURL)
         player?.volume = volume
         player?.rate = playbackRate
@@ -80,30 +80,24 @@ class PodcastViewModel: ObservableObject {
     func playAudio() {
         initializePlayer() // Ensure the player is initialized
         
-        // Add a small delay to ensure the player is ready
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+        guard let player = player else {
+            print("Player is nil!")
+            return
+        }
+        
+        // Seek to the beginning with zero tolerance
+        player.seek(to: .zero, toleranceBefore: .zero, toleranceAfter: .zero) { [weak self] finished in
             guard let self = self else { return }
             
-            if let player = self.player {
-                if player.currentTime().seconds > 0 {
-                    player.seek(to: .zero, toleranceBefore: .zero, toleranceAfter: .zero) { finished in
-                        if finished {
-                            player.play()
-                            self.isPlaying = true
-                            print("Player started playing at time: \(player.currentTime().seconds)")
-                        } else {
-                            print("Failed to seek to the beginning before playback.")
-                        }
-                    }
-                } else {
-                    player.play()
-                    self.isPlaying = true
-                    print("Player started playing at time: \(player.currentTime().seconds)")
-                }
+            if finished {
+                player.play()
+                self.isPlaying = true
+                print("Player started playing at time: \(player.currentTime().seconds)")
+            } else {
+                print("Failed to seek to the beginning before playback.")
             }
         }
     }
-
 
     func togglePlayPause() {
         guard let player = player else {
@@ -203,37 +197,6 @@ class PodcastViewModel: ObservableObject {
 
         return chunks
     }
-    
-    private func verifyAudioFile(at url: URL) -> Bool {
-        let asset = AVURLAsset(url: url)
-        let duration = CMTimeGetSeconds(asset.duration)
-        print("Combined audio file duration: \(duration) seconds")
-        
-        // Check if the duration is valid
-        guard duration > 0 else {
-            print("Invalid audio file: duration is zero or negative.")
-            return false
-        }
-        
-        // Check if the file is playable
-        var isPlayable = false
-        let semaphore = DispatchSemaphore(value: 0)
-        
-        asset.loadValuesAsynchronously(forKeys: ["playable"]) {
-            if asset.statusOfValue(forKey: "playable", error: nil) == .loaded {
-                isPlayable = asset.isPlayable
-            }
-            semaphore.signal()
-        }
-        
-        semaphore.wait()
-        
-        if !isPlayable {
-            print("Audio file is not playable.")
-        }
-        
-        return isPlayable
-    }
 
     func generateAndPlayPodcast(text: String) {
         isLoading = true
@@ -248,16 +211,30 @@ class PodcastViewModel: ObservableObject {
                 DispatchQueue.main.async { self.generatedPodcast = fullScript }
 
                 let chunks = splitScriptIntoChunks(fullScript)
-                var audioFiles: [URL?] = Array(repeating: nil, count: chunks.count) // Preserve order
+                var audioFiles: [URL?] = Array(repeating: nil, count: chunks.count)
                 let group = DispatchGroup()
 
-                // Generate audio files in the correct order
                 for (index, chunk) in chunks.enumerated() {
                     group.enter()
+                    
+                    // Generate a unique file name for each chunk
+                    let chunkFileName = "chunk_\(index).mp3"
+                    let chunkFileURL = FileManager.default.temporaryDirectory.appendingPathComponent(chunkFileName)
+                    
+                    // Synthesize speech and save it to the unique file
                     googleTTSService.synthesizeSpeech(text: chunk) { fileURL in
                         if let fileURL = fileURL {
-                            print("Generated audio file for chunk \(index): \(chunk.prefix(20))... at \(fileURL)")
-                            audioFiles[index] = fileURL // Store in the correct position
+                            do {
+                                // Move the file to the unique chunk file URL
+                                if FileManager.default.fileExists(atPath: chunkFileURL.path) {
+                                    try FileManager.default.removeItem(at: chunkFileURL)
+                                }
+                                try FileManager.default.moveItem(at: fileURL, to: chunkFileURL)
+                                audioFiles[index] = chunkFileURL
+                                print("Generated audio file for chunk \(index): \(chunk.prefix(20))... at \(chunkFileURL)")
+                            } catch {
+                                print("Failed to move chunk \(index) to unique file: \(error.localizedDescription)")
+                            }
                         } else {
                             print("Failed to generate audio for chunk \(index): \(chunk.prefix(20))...")
                         }
@@ -266,7 +243,6 @@ class PodcastViewModel: ObservableObject {
                 }
 
                 group.notify(queue: .main) {
-                    // Filter out nil values and ensure all chunks were generated
                     let validAudioFiles = audioFiles.compactMap { $0 }
                     if validAudioFiles.count != chunks.count {
                         print("Some audio files failed to generate!")
@@ -278,13 +254,12 @@ class PodcastViewModel: ObservableObject {
                         return
                     }
 
-                    // Debug: Print the order of audio files
+                    // Log the order of audio files
                     print("Order of audio files:")
                     for (index, fileURL) in validAudioFiles.enumerated() {
                         print("Audio file \(index): \(fileURL)")
                     }
 
-                    // Generate a unique file name for the combined audio
                     let timestamp = Int(Date().timeIntervalSince1970)
                     let outputURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent("finalPodcast_\(timestamp).m4a")
                     
@@ -295,7 +270,7 @@ class PodcastViewModel: ObservableObject {
                                 self.finalAudioURL = outputURL
                                 self.playAudio()
                             } else {
-                                self.errorMessage = "Failed to generate or verify audio."
+                                self.errorMessage = "Failed to generate audio."
                                 self.showError = true
                             }
                         }
@@ -317,12 +292,12 @@ class PodcastViewModel: ObservableObject {
                 let composition = AVMutableComposition()
                 var insertTime = CMTime.zero
                 
-                for fileURL in audioFiles {
+                for (index, fileURL) in audioFiles.enumerated() {
                     let asset = AVURLAsset(url: fileURL)
                     
-                    // Log the duration of each audio file
+                    // Log the order and duration of each chunk
                     let duration = CMTimeGetSeconds(asset.duration)
-                    print("Inserting audio file: \(fileURL), duration: \(duration), insert time: \(CMTimeGetSeconds(insertTime))")
+                    print("Inserting chunk \(index) at time \(CMTimeGetSeconds(insertTime)), duration: \(duration)")
                     
                     guard let track = asset.tracks(withMediaType: .audio).first else {
                         print("Skipping invalid audio file at \(fileURL)")
@@ -358,6 +333,37 @@ class PodcastViewModel: ObservableObject {
                 }
             }
         }
+    }
+    
+    private func verifyAudioFile(at url: URL) -> Bool {
+        let asset = AVURLAsset(url: url)
+        let duration = CMTimeGetSeconds(asset.duration)
+        print("Combined audio file duration: \(duration) seconds")
+        
+        // Check if the duration is valid
+        guard duration > 0 else {
+            print("Invalid audio file: duration is zero or negative.")
+            return false
+        }
+        
+        // Check if the file is playable
+        var isPlayable = false
+        let semaphore = DispatchSemaphore(value: 0)
+        
+        asset.loadValuesAsynchronously(forKeys: ["playable"]) {
+            if asset.statusOfValue(forKey: "playable", error: nil) == .loaded {
+                isPlayable = asset.isPlayable
+            }
+            semaphore.signal()
+        }
+        
+        semaphore.wait()
+        
+        if !isPlayable {
+            print("Audio file is not playable.")
+        }
+        
+        return isPlayable
     }
     
     func pauseAudio() {
