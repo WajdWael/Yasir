@@ -295,6 +295,10 @@ class PodcastViewModel: ObservableObject {
                             self.isLoading = false
                             if success && self.verifyAudioFile(at: outputURL) {
                                 self.finalAudioURL = outputURL
+                                
+                                // Save the podcast URL to the document
+                                self.document.podcastAudioURL = outputURL
+                                
                                 self.initializePlayer() // Initialize the player with the new podcast
                                 self.playAudio() // Start playing the new podcast
                             } else {

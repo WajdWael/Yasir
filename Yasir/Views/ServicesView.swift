@@ -428,13 +428,17 @@
 ////        ServicesView(document: document)
 ////    }
 ////}
-
-
 import SwiftUI
-import Foundation
 
 struct ServicesView: View {
     let document: Document
+    @StateObject private var podcastViewModel: PodcastViewModel
+
+    init(document: Document) {
+        self.document = document
+        self._podcastViewModel = StateObject(wrappedValue: PodcastViewModel(document: document))
+    }
+
     @State private var isGenerating = false
     @State private var navigateToExam = false
     @State private var navigateToSummary = false
@@ -444,8 +448,8 @@ struct ServicesView: View {
     @State private var generatedSummary: String = ""
     @State private var errorMessage: String?
     let geminiService = GeminiService()
-    @EnvironmentObject var examHistory: ExamHistory // Add this line
-    @EnvironmentObject var summaryViewModel: SummaryViewModel 
+    @EnvironmentObject var examHistory: ExamHistory
+    @EnvironmentObject var summaryViewModel: SummaryViewModel
     @State private var isSummaryGenerated = false
     @State private var showingDeleteAlert = false
     @State private var deleteOffsets: IndexSet?
@@ -453,190 +457,86 @@ struct ServicesView: View {
     @Environment(\.dismiss) var dismiss
     
     var body: some View {
+        // Check if the summary or podcast has been generated for this document
+        let isSummaryEnabled = !summaryViewModel.isSummaryGenerated(for: document.name)
+        let isPodcastEnabled = document.podcastAudioURL == nil
         
-        // Check if the summary has been generated for this document
-        let isEnabled = !summaryViewModel.isSummaryGenerated(for: document.name)
         NavigationStack {
-            
-            
-            ZStack{
-            
+            ZStack {
                 Color(.secondarySystemBackground)
-                .edgesIgnoringSafeArea(.all)
+                    .edgesIgnoringSafeArea(.all)
                 
-                
-            VStack (alignment: .leading){
-                Text(document.name)
-                    .font(.largeTitle)
-                    .bold()
-                    .padding(.top, 20)
-                
-                Spacer()
-                
-                Text("Create one of these services:")
-                    .font(.subheadline)
-                    .foregroundColor(.gray)
-                    .padding(.top, 10)
-                
-                HStack{
-                    Button(action: {
-                        startExamGeneration()
-                    }){
-                        HStack{
-                            
-                            Image(systemName: "doc.text")
-                            Text("Exam")
-                                .bold()
-                        }.frame(width: 160, height: 50)
-                            .background(Color.teal)
-                            .foregroundColor(.white)
-                            .cornerRadius(10)
-                            .padding(.vertical, 5)
-                        
-                    }
-                    
-                    Button(action: {
-                        navigateToPodcast = true
-                    }){
-                        HStack{
-                            
-                            Image(systemName: "mic")
-                            Text("Podcast")
-                                .bold()
-                            
-                        }.frame(width: 160, height: 50)
-                            .background(Color.teal)
-                            .foregroundColor(.white)
-                            .cornerRadius(10)
-                            .padding(.vertical, 5)
-                        
-                    }
-                }
-                
-                Button(action: {
-                    if !summaryViewModel.isSummaryGenerated(for: document.name) {
-                        startSummaryGeneration()
-                    }
-                }){
-                    HStack{
-                        
-                        Image(systemName: "doc.on.clipboard")
-                        Text("Summary")
-                            .bold()
-                        
-                    }.frame(width: 160, height: 50)
-                    //.background(Color.teal)
-                        .background(summaryViewModel.isSummaryGenerated(for: document.name) ? Color.gray.opacity(0.3) : Color.teal)
-                        .foregroundColor(.white)
-                        .disabled(summaryViewModel.isSummaryGenerated(for: document.name))
-                        .cornerRadius(10)
-                        .padding(.vertical, 5)
-                    
-                }
-                
-                
-                
-                
-                List {
-                    // Display past exams
-                    ForEach(examHistory.pastExams.filter { $0.documentName == document.name }) { exam in
-                        NavigationLink(destination: ExamSummaryView(
-                            documentName: exam.documentName,
-                            questions: exam.questions,
-                            stableAnswers: exam.stableAnswers,
-                            selectedAnswers: exam.selectedAnswers
-                        )) {
-                            VStack(alignment: .leading) {
-                                Text("Exam \(exam.examNumber): \(exam.documentName)")
-                                    .font(.headline)
-                                Text("Score: \(exam.correctAnswersCount)/\(exam.totalQuestions)")
-                                    .foregroundColor(.gray)
-                                Text(exam.date, style: .date)
-                                    .font(.caption)
-                            }
-                        }
-                    }
-                    .onDelete { offsets in
-                        // Remove specific exams for this document
-                        let examsToRemove = examHistory.pastExams
-                            .filter { $0.documentName == document.name }
-                            .enumerated()
-                            .compactMap { offsets.contains($0.offset) ? $0.element.id : nil }
-                        
-                        examHistory.pastExams.removeAll { examsToRemove.contains($0.id) }
-                    }
-                    
-                    
-                    ForEach(summaryViewModel.generatedSummaries.filter { $0.documentName == document.name }) { summary in
-                        NavigationLink(destination: SummaryView(summary: summary.summaryText, document: document)) {
-                            VStack(alignment: .leading) {
-                                Text("Summary for \(summary.documentName)")
-                                    .font(.headline)
-                                Text(summary.date, style: .date)
-                                    .font(.caption)
-                            }
-                        }
-                    }
-                    .onDelete { offsets in
-                        // Remove specific summaries for this document
-                        summaryViewModel.deleteSummary(at: offsets, for: document.name)
-                    }
-                }.scrollContentBackground(.hidden)
-                
-                   
-                
-                
-                
-                
-                Spacer()
-                
-                if isGenerating {
-                    ProgressView("Generating...")
-                        .progressViewStyle(CircularProgressViewStyle())
+                VStack(alignment: .leading) {
+                    Text(document.name)
+                        .font(.largeTitle)
+                        .bold()
                         .padding(.top, 20)
-                        .frame(maxWidth: .infinity, alignment: .center)
-                }
-                
-                if let errorMessage = errorMessage {
-                    Text(errorMessage)
-                        .foregroundColor(.red)
+                    
+                    Spacer()
+                    
+                    Text("Create one of these services:")
+                        .font(.subheadline)
+                        .foregroundColor(.gray)
                         .padding(.top, 10)
+                    
+                    HStack {
+                        ExamButton(action: startExamGeneration)
+                        PodcastButton(isEnabled: isPodcastEnabled, action: { navigateToPodcast = true })
+                    }
+                    
+                    SummaryButton(isEnabled: isSummaryEnabled, action: {
+                        if !summaryViewModel.isSummaryGenerated(for: document.name) {
+                            startSummaryGeneration()
+                        }
+                    })
+                    
+                    ServicesListView(document: document)
+                        .environmentObject(examHistory)
+                        .environmentObject(summaryViewModel)
+                        .environmentObject(podcastViewModel)
+                    
+                    Spacer()
+                    
+                    if isGenerating {
+                        ProgressView("Generating...")
+                            .progressViewStyle(CircularProgressViewStyle())
+                            .padding(.top, 20)
+                            .frame(maxWidth: .infinity, alignment: .center)
+                    }
+                    
+                    if let errorMessage = errorMessage {
+                        Text(errorMessage)
+                            .foregroundColor(.red)
+                            .padding(.top, 10)
+                    }
+                    
+                    NavigationLink(
+                        destination: SummaryView(summary: generatedSummary, document: document),
+                        isActive: $navigateToSummary
+                    ) {
+                        EmptyView()
+                    }
+                    
+                    NavigationLink(
+                        destination: ExamView(
+                            documentName: document.name,
+                            questions: examQuestions
+                        )
+                        .environmentObject(examHistory)
+                        .id(examQuestions.count),
+                        isActive: $navigateToExam
+                    ) {
+                        EmptyView()
+                    }
+                    
+                    NavigationLink(destination: PodcastView(document: document), isActive: $navigateToPodcast) {
+                        EmptyView()
+                    }
                 }
-                
-                
-                
-                NavigationLink(
-                    destination: SummaryView(summary: generatedSummary, document: document),
-                    isActive: $navigateToSummary
-                ) {
-                    EmptyView()
-                }
-                
-                
-                NavigationLink(
-                    destination: ExamView(
-                        documentName: document.name,
-                        questions: examQuestions
-                    )
-                    .environmentObject(examHistory)
-                    .id(examQuestions.count),
-                    isActive: $navigateToExam
-                ) {
-                    EmptyView()
-                }
-                
-                // Navigate to the podcast view
-                NavigationLink(destination: PodcastView(document: document), isActive: $navigateToPodcast) {
-                    EmptyView()
-                }
+                .padding()
+                .padding(.horizontal)
             }
-            
-            .padding()
-            .padding(.horizontal)
         }
-            
-        }
-//<<<<<<< Updated upstream
         .navigationBarBackButtonHidden(true)
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
@@ -647,9 +547,6 @@ struct ServicesView: View {
                 }
             }
         }
-//=======
-//       
-//>>>>>>> Stashed changes
     }
     
     // Function to start generating an exam
@@ -664,7 +561,6 @@ struct ServicesView: View {
                 let result = try await geminiService.processText(content: text, type: .questions)
                 let parsedQuestions = parseExam(result)
                 
-                // Check for valid questions
                 guard !parsedQuestions.isEmpty else {
                     throw NSError(domain: "AppError", code: 1, userInfo: [NSLocalizedDescriptionKey: "Failed to generate valid exam questions"])
                 }
@@ -698,14 +594,11 @@ struct ServicesView: View {
             do {
                 let result = try await geminiService.processText(content: text, type: .summary)
                 DispatchQueue.main.async {
-//
                     generatedSummary = result
-                     // Save the generated summary to the view model
                     let newSummary = GeneratedSummary(documentName: document.name, summaryText: result, date: Date())
-                        summaryViewModel.addSummary(newSummary)
-                        //summaryViewModel.saveSummary(newSummary)
-                        isGenerating = false
-                        navigateToSummary = true
+                    summaryViewModel.addSummary(newSummary)
+                    isGenerating = false
+                    navigateToSummary = true
                 }
             } catch {
                 DispatchQueue.main.async {
@@ -721,7 +614,6 @@ struct ServicesView: View {
     private func parseExam(_ jsonString: String) -> [Question] {
         var cleanedString = jsonString.trimmingCharacters(in: .whitespacesAndNewlines)
         
-        // Extract JSON inside markdown code block if present.
         if cleanedString.hasPrefix("```json") {
             if let startRange = cleanedString.range(of: "```json") {
                 cleanedString = String(cleanedString[startRange.upperBound...])
@@ -747,18 +639,16 @@ struct ServicesView: View {
     }
 }
 
-// Custom button component remains unchanged.
-struct ServiceButton: View {
-    let title: String
-    let icon: String
+// MARK: - Extracted Components
+
+struct ExamButton: View {
     let action: () -> Void
     
-
     var body: some View {
         Button(action: action) {
             HStack {
-                Image(systemName: icon)
-                Text(title)
+                Image(systemName: "doc.text")
+                Text("Exam")
                     .bold()
             }
             .frame(width: 160, height: 50)
@@ -770,14 +660,110 @@ struct ServiceButton: View {
     }
 }
 
-
-class SummaryStore: ObservableObject {
-    @Published var summaries: [ExamSummary] = []
+struct PodcastButton: View {
+    let isEnabled: Bool
+    let action: () -> Void
     
-    func addSummary(_ summary: ExamSummary) {
-        summaries.insert(summary, at: 0)
+    var body: some View {
+        Button(action: action) {
+            HStack {
+                Image(systemName: "mic")
+                Text("Podcast")
+                    .bold()
+            }
+            .frame(width: 160, height: 50)
+            .background(isEnabled ? Color.teal : Color.gray.opacity(0.3))
+            .foregroundColor(.white)
+            .disabled(!isEnabled)
+            .cornerRadius(10)
+            .padding(.vertical, 5)
+        }
     }
 }
 
+struct SummaryButton: View {
+    let isEnabled: Bool
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            HStack {
+                Image(systemName: "doc.on.clipboard")
+                Text("Summary")
+                    .bold()
+            }
+            .frame(width: 160, height: 50)
+            .background(isEnabled ? Color.teal : Color.gray.opacity(0.3))
+            .foregroundColor(.white)
+            .disabled(!isEnabled)
+            .cornerRadius(10)
+            .padding(.vertical, 5)
+        }
+    }
+}
 
-
+struct ServicesListView: View {
+    let document: Document
+    @EnvironmentObject var examHistory: ExamHistory
+    @EnvironmentObject var summaryViewModel: SummaryViewModel
+    @EnvironmentObject var podcastViewModel: PodcastViewModel
+    
+    var body: some View {
+        List {
+            // Display past exams
+            ForEach(examHistory.pastExams.filter { $0.documentName == document.name }) { exam in
+                NavigationLink(destination: ExamSummaryView(
+                    documentName: exam.documentName,
+                    questions: exam.questions,
+                    stableAnswers: exam.stableAnswers,
+                    selectedAnswers: exam.selectedAnswers
+                )) {
+                    VStack(alignment: .leading) {
+                        Text("Exam \(exam.examNumber): \(exam.documentName)")
+                            .font(.headline)
+                        Text("Score: \(exam.correctAnswersCount)/\(exam.totalQuestions)")
+                            .foregroundColor(.gray)
+                        Text(exam.date, style: .date)
+                            .font(.caption)
+                    }
+                }
+            }
+            .onDelete { offsets in
+                let examsToRemove = examHistory.pastExams
+                    .filter { $0.documentName == document.name }
+                    .enumerated()
+                    .compactMap { offsets.contains($0.offset) ? $0.element.id : nil }
+                
+                examHistory.pastExams.removeAll { examsToRemove.contains($0.id) }
+            }
+            
+            // Display past summaries
+            ForEach(summaryViewModel.generatedSummaries.filter { $0.documentName == document.name }) { summary in
+                NavigationLink(destination: SummaryView(summary: summary.summaryText, document: document)) {
+                    VStack(alignment: .leading) {
+                        Text("Summary for \(summary.documentName)")
+                            .font(.headline)
+                        Text(summary.date, style: .date)
+                            .font(.caption)
+                    }
+                }
+            }
+            .onDelete { offsets in
+                summaryViewModel.deleteSummary(at: offsets, for: document.name)
+            }
+            
+            // Display saved podcast
+            if let podcastURL = document.podcastAudioURL {
+                NavigationLink(destination: PodcastView(document: document)) {
+                    VStack(alignment: .leading) {
+                        Text("Podcast for \(document.name)")
+                            .font(.headline)
+                        Text("\(Date(), style: .date)")
+                            .font(.caption)
+                    }
+                }
+            }
+        }
+        .scrollContentBackground(.hidden)
+    }
+}
