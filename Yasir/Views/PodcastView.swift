@@ -1,6 +1,7 @@
 import SwiftUI
 struct PodcastView: View {
     @StateObject private var viewModel: PodcastViewModel
+    @Environment(\.dismiss) var dismiss
 
     init(document: Document) {
         self._viewModel = StateObject(wrappedValue: PodcastViewModel(document: document))
@@ -18,8 +19,8 @@ struct PodcastView: View {
                 .background(Color(.systemGray6))
                 .cornerRadius(10)
                 .padding()
-            } else {
-                // Show "Generating Podcast..." when the audio is being prepared
+            } else if viewModel.isGenerating {
+                // Show "Generating Podcast..." only if the audio is being generated
                 ScrollView {
                     ProgressView("Generating Podcast...")
                         .progressViewStyle(CircularProgressViewStyle(tint: .teal))
@@ -29,6 +30,16 @@ struct PodcastView: View {
                 .background(Color(.systemGray6))
                 .cornerRadius(10)
                 .padding(.horizontal)
+            } else if viewModel.finalAudioURL != nil {
+               // this is for the case where the user is view a generated podcast
+                ScrollView {
+                    Text(viewModel.generatedPodcast)
+                        .padding()
+                }
+                .frame(maxWidth: .infinity, maxHeight: 400)
+                .background(Color(.systemGray6))
+                .cornerRadius(10)
+                .padding()
             }
 
             // Progress Slider
@@ -106,12 +117,28 @@ struct PodcastView: View {
             }
         }
         .padding()
-        .navigationTitle("Podcast")
+        .navigationTitle("\(viewModel.document.name)'s Podcast")
+        .navigationBarBackButtonHidden(true) // Add this line
+        .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button(action: { dismiss()}) {
+                    Image(systemName: "chevron.left")
+                        .foregroundColor(.teal)
+                        .bold()
+                }
+            }
+        }
         .onAppear {
-            // Automatically generate the podcast when the view appears
-            if let text = viewModel.document.extractedText {
+            // Check if the podcast has already been generated
+            if viewModel.finalAudioURL == nil, let text = viewModel.document.extractedText {
+                // Generate the podcast only if it hasn't been generated yet
                 viewModel.generateAndPlayPodcast(text: text)
+            } else if viewModel.finalAudioURL != nil {
+                // Play the existing podcast if it has already been generated
+                viewModel.initializePlayer()
+                viewModel.playAudio()
             } else {
+                // Handle the case where there's no text in the document
                 viewModel.errorMessage = "No text found in the document."
                 viewModel.showError = true
             }

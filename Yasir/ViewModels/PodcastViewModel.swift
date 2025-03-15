@@ -6,6 +6,7 @@ class PodcastViewModel: ObservableObject {
     @Published var generatedPodcast: String = ""
     @Published var isLoading: Bool = false
     @Published var isPlaying: Bool = false
+    @Published var isGenerating: Bool = false
     @Published var showError: Bool = false
     @Published var errorMessage: String? = nil
     @Published var volume: Float = 1.0 {
@@ -30,10 +31,15 @@ class PodcastViewModel: ObservableObject {
 
     init(document: Document) {
         self.document = document
+        // Use the existing podcast URL if it exists
+        self.finalAudioURL = document.podcastAudioURL
+        self.generatedPodcast = document.podcastScript ?? ""
+
     }
 
+
     // MARK: - Audio Controls
-    private func initializePlayer() {
+     func initializePlayer() {
         guard let finalAudioURL = finalAudioURL else {
             print("Final audio URL is nil!")
             return
@@ -225,7 +231,17 @@ class PodcastViewModel: ObservableObject {
     }
 
     func generateAndPlayPodcast(text: String) {
+        // If a podcast URL already exists, use it instead of generating a new one
+        if let existingURL = document.podcastAudioURL {
+            self.finalAudioURL = existingURL
+            self.generatedPodcast = document.podcastScript ?? ""
+            self.initializePlayer()
+            self.playAudio()
+            return
+        }
+
         isLoading = true
+        isGenerating = true
         showError = false
         errorMessage = nil
 
@@ -275,6 +291,7 @@ class PodcastViewModel: ObservableObject {
                         print("Some audio files failed to generate!")
                         DispatchQueue.main.async {
                             self.isLoading = false
+                            self.isGenerating = false
                             self.errorMessage = "Some audio files failed to generate."
                             self.showError = true
                         }
@@ -293,11 +310,13 @@ class PodcastViewModel: ObservableObject {
                     self.combineAudioFiles(validAudioFiles, outputURL: outputURL) { success in
                         DispatchQueue.main.async {
                             self.isLoading = false
+                            self.isGenerating = false
                             if success && self.verifyAudioFile(at: outputURL) {
                                 self.finalAudioURL = outputURL
                                 
-                                // Save the podcast URL to the document
+                                // Save the podcast URL and script to the document
                                 self.document.podcastAudioURL = outputURL
+                                self.document.podcastScript = self.generatedPodcast
                                 
                                 self.initializePlayer() // Initialize the player with the new podcast
                                 self.playAudio() // Start playing the new podcast
@@ -311,6 +330,7 @@ class PodcastViewModel: ObservableObject {
             } catch {
                 DispatchQueue.main.async {
                     self.isLoading = false
+                    self.isGenerating = false
                     self.errorMessage = "Failed to generate podcast: \(error.localizedDescription)"
                     self.showError = true
                 }

@@ -428,6 +428,8 @@
 ////        ServicesView(document: document)
 ////    }
 ////}
+
+
 import SwiftUI
 
 struct ServicesView: View {
@@ -481,7 +483,11 @@ struct ServicesView: View {
                     
                     HStack {
                         ExamButton(action: startExamGeneration)
-                        PodcastButton(isEnabled: isPodcastEnabled, action: { navigateToPodcast = true })
+                        PodcastButton(isEnabled: isPodcastEnabled, action: {
+                            if document.podcastAudioURL == nil {
+                                navigateToPodcast = true
+                            }
+                        })
                     }
                     
                     SummaryButton(isEnabled: isSummaryEnabled, action: {
@@ -754,13 +760,23 @@ struct ServicesListView: View {
             
             // Display saved podcast
             if let podcastURL = document.podcastAudioURL {
-                NavigationLink(destination: PodcastView(document: document)) {
-                    VStack(alignment: .leading) {
-                        Text("Podcast for \(document.name)")
-                            .font(.headline)
-                        Text("\(Date(), style: .date)")
-                            .font(.caption)
+                // Wrap the podcast item in a ForEach to use .onDelete
+                ForEach([document], id: \.self) { _ in
+                    NavigationLink(destination: PodcastView(document: document)) {
+                        VStack(alignment: .leading) {
+                            Text("Podcast for \(document.name)")
+                                .font(.headline)
+                            Text("\(Date(), style: .date)")
+                                .font(.caption)
+                        }
                     }
+                }
+                .onDelete { _ in
+                    // Handle podcast deletion
+                    document.podcastAudioURL = nil
+                    document.podcastScript = nil
+                    podcastViewModel.finalAudioURL = nil
+                    podcastViewModel.generatedPodcast = ""
                 }
             }
         }

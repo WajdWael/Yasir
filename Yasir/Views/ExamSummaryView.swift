@@ -45,6 +45,16 @@ struct ExamSummaryView: View {
             .toolbarBackground(Color.teal, for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
         }
+        .navigationBarBackButtonHidden(true)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button(action: { dismiss() }) {
+                    Image(systemName: "chevron.left")
+                        .foregroundColor(.white)
+                        .bold()
+                }
+            }
+        }
     }
     
     // MARK: - Header
@@ -60,16 +70,6 @@ struct ExamSummaryView: View {
                 .foregroundColor(.white)
         }
         .padding(.vertical, 20)
-        .navigationBarBackButtonHidden(true)
-        .toolbar {
-            ToolbarItem(placement: .navigationBarLeading) {
-                Button(action: { dismiss() }) {
-                    Image(systemName: "chevron.left")
-                        .foregroundColor(.white)
-                        .bold()
-                }
-            }
-        }
     }
     
     // MARK: - Question Card

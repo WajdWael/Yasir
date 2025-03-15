@@ -43,12 +43,14 @@ class Document: ObservableObject {
     var pdfData: Data
     var extractedText: String?
     var podcastAudioURL: URL? // for saving the generated podcast
+    var podcastScript: String? // for displaying the script in saved podcast
 
-    init(name: String, pdfData: Data, extractedText: String? = nil, podcastAudioURL: URL? = nil) {
+    init(name: String, pdfData: Data, extractedText: String? = nil, podcastAudioURL: URL? = nil, podcastScript: String? = nil) {
         self.name = name
         self.pdfData = pdfData
         self.extractedText = extractedText
         self.podcastAudioURL = podcastAudioURL
+        self.podcastScript = podcastScript
         
     }
 }
