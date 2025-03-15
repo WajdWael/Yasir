@@ -8,9 +8,11 @@
 
 /* Begin PBXBuildFile section */
 		1BDFBB352D80617400C63354 /* RiveRuntime in Frameworks */ = {isa = PBXBuildFile; productRef = 1BDFBB342D80617400C63354 /* RiveRuntime */; };
+		1BDFBD592D85B33B00C63354 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 1BDFBD582D85B33B00C63354 /* Localizable.xcstrings */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		1BDFBD582D85B33B00C63354 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		8BDDEDA12D771B1B00541725 /* Yasir.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Yasir.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -39,6 +41,7 @@
 			children = (
 				8BDDEDA32D771B1B00541725 /* Yasir */,
 				8BDDEDA22D771B1B00541725 /* Products */,
+				1BDFBD582D85B33B00C63354 /* Localizable.xcstrings */,
 			);
 			sourceTree = "<group>";
 		};
@@ -118,6 +121,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1BDFBD592D85B33B00C63354 /* Localizable.xcstrings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
