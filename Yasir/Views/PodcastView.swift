@@ -52,7 +52,7 @@ struct PodcastView: View {
 
             // Playback Speed Button
             Button(action: viewModel.changePlaybackRate) {
-                Text("\(String(format: "%.1fx", viewModel.playbackRate))")
+                Text("\(String(format: "%.2fx", viewModel.playbackRate))")
                     .font(.headline)
                     .foregroundColor(.teal)
                     .cornerRadius(10)

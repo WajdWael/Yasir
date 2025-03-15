@@ -78,36 +78,53 @@ class PodcastViewModel: ObservableObject {
     }
 
     func playAudio() {
-        initializePlayer() // Ensure the player is initialized
-        
         guard let player = player else {
             print("Player is nil!")
             return
         }
         
-        // Seek to the beginning with zero tolerance
-        player.seek(to: .zero, toleranceBefore: .zero, toleranceAfter: .zero) { [weak self] finished in
-            guard let self = self else { return }
+        // If the player is already paused, resume playback from the current position
+        if !isPlaying {
+            player.play()
+            isPlaying = true
             
-            if finished {
-                player.play()
-                self.isPlaying = true
-                print("Player started playing at time: \(player.currentTime().seconds)")
-            } else {
-                print("Failed to seek to the beginning before playback.")
+            // Add a small delay to ensure the player has fully resumed playback
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
+                guard let self = self else { return }
+                player.rate = self.playbackRate // Set the playback speed
+                print("Player resumed playing at time: \(player.currentTime().seconds) at \(self.playbackRate)x speed")
+            }
+        } else {
+            // If the player is not paused, seek to the beginning and start playback
+            player.seek(to: .zero, toleranceBefore: .zero, toleranceAfter: .zero) { [weak self] finished in
+                guard let self = self else { return }
+                
+                if finished {
+                    player.play()
+                    self.isPlaying = true
+                    
+                    // Add a small delay to ensure the player has fully started playback
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                        player.rate = self.playbackRate // Set the playback speed
+                        print("Player started playing at time: \(player.currentTime().seconds) at \(self.playbackRate)x speed")
+                    }
+                } else {
+                    print("Failed to seek to the beginning before playback.")
+                }
             }
         }
     }
-
+    
     func togglePlayPause() {
         guard let player = player else {
             print("Player is nil!")
             return
         }
+        
         if isPlaying {
             pauseAudio()
         } else {
-            playAudio()
+            playAudio() // This will now resume from the current position if paused
         }
     }
     
@@ -127,14 +144,23 @@ class PodcastViewModel: ObservableObject {
 
     func changePlaybackRate() {
         guard let player = player else { return }
+        
+        // Cycle through playback rates
         switch playbackRate {
-        case 0.5: playbackRate = 1.0
+        case 0.5: playbackRate = 0.75
+        case 0.75: playbackRate = 1.0
         case 1.0: playbackRate = 1.5
         case 1.5: playbackRate = 2.0
         case 2.0: playbackRate = 0.5
         default: playbackRate = 1.0
         }
-        player.rate = playbackRate
+        
+        // Update the player's rate if it's currently playing
+        if isPlaying {
+            player.rate = playbackRate
+        }
+        
+        print("Playback rate changed to \(playbackRate)x")
     }
 
     func seek(to progress: Double) {
@@ -203,6 +229,7 @@ class PodcastViewModel: ObservableObject {
         showError = false
         errorMessage = nil
 
+        // Reset the player only when generating a new podcast
         resetPlayer()
 
         Task {
@@ -268,7 +295,8 @@ class PodcastViewModel: ObservableObject {
                             self.isLoading = false
                             if success && self.verifyAudioFile(at: outputURL) {
                                 self.finalAudioURL = outputURL
-                                self.playAudio()
+                                self.initializePlayer() // Initialize the player with the new podcast
+                                self.playAudio() // Start playing the new podcast
                             } else {
                                 self.errorMessage = "Failed to generate audio."
                                 self.showError = true
@@ -369,6 +397,7 @@ class PodcastViewModel: ObservableObject {
     func pauseAudio() {
         player?.pause()
         isPlaying = false
+        print("Player paused at time: \(player?.currentTime().seconds ?? 0)")
     }
 
     private func stopTimeObserver() {
